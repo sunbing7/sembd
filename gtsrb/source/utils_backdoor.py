@@ -1,10 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# @Date    : 2018-11-05 11:30:01
-# @Author  : Bolun Wang (bolunwang@cs.ucsb.edu)
-# @Link    : http://cs.ucsb.edu/~bolunwang
-
-
 import h5py
 import numpy as np
 import tensorflow as tf

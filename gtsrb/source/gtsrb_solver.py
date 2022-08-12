@@ -760,24 +760,6 @@ class solver:
         model_copy = keras.models.clone_model(self.model)
         model_copy.set_weights(self.model.get_weights())
 
-        # find the range of hidden neuron output
-        '''
-        min = []
-        max = []
-        for idx in range(self.mini_batch):
-            X_batch, Y_batch = gen.next()
-            pre = partial_model1.predict(X_batch)
-            pre = pre.reshape((len(pre), len(np.ndarray.flatten(pre[0]))))
-
-            _max = np.max(pre, axis=0)
-            _min = np.min(pre, axis=0)
-
-            min.append(_min)
-            max.append(_max)
-
-        min = np.min(np.array(min), axis=0)
-        max = np.max(np.array(max), axis=0)
-        '''
         self.mini_batch = 1
         perm_predict_avg = []
         for idx in range(self.mini_batch):
