@@ -264,12 +264,12 @@ def trigger_analyzer(analyzer, gen=None, train_adv_gen=None, test_adv_gen=None):
     visualize_start_time = time.time()
 
     # execute reverse engineering
-    #analyzer.solve(gen, train_adv_gen, test_adv_gen)
+    analyzer.solve(gen, train_adv_gen, test_adv_gen)
 
-    x_t_c, y_t_c = load_dataset_c()
-    gen = build_data_loader(x_t_c, y_t_c)
+    #x_t_c, y_t_c = load_dataset_c()
+    #gen = build_data_loader(x_t_c, y_t_c)
 
-    analyzer.solve_fp(gen)
+    #analyzer.solve_fp(gen)
 
     visualize_end_time = time.time()
     print('Analyzing time %f seconds' %

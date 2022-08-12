@@ -1685,7 +1685,7 @@ class solver:
             min = np.min(np.array(min), axis=0)
             max = np.max(np.array(max), axis=0)
             '''
-            self.mini_batch = 3
+            self.mini_batch = 1
             perm_predict_avg = []
             for idx in range(self.mini_batch):
                 X_batch, Y_batch = gen.next()
