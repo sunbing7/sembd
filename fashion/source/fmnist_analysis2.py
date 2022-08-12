@@ -76,9 +76,9 @@ def load_dataset():
     # Make sure images have shape (28, 28, 1)
     x_train = np.expand_dims(x_train, -1)
     x_test = np.expand_dims(x_test, -1)
-    print("x_train shape:", x_train.shape)
-    print(x_train.shape[0], "train samples")
-    print(x_test.shape[0], "test samples")
+    #print("x_train shape:", x_train.shape)
+    #print(x_train.shape[0], "train samples")
+    #print(x_test.shape[0], "test samples")
 
     # convert class vectors to binary class matrices
     y_train = tensorflow.keras.utils.to_categorical(y_train, NUM_CLASSES)
@@ -342,9 +342,9 @@ def load_dataset_adv():
     # Make sure images have shape (28, 28, 1)
     x_train = np.expand_dims(x_train, -1)
     x_test = np.expand_dims(x_test, -1)
-    print("x_train shape:", x_train.shape)
-    print(x_train.shape[0], "train samples")
-    print(x_test.shape[0], "test samples")
+    #print("x_train shape:", x_train.shape)
+    #print(x_train.shape[0], "train samples")
+    #print(x_test.shape[0], "test samples")
 
     # convert class vectors to binary class matrices
     y_train = tensorflow.keras.utils.to_categorical(y_train, NUM_CLASSES)
