@@ -35,8 +35,8 @@ TARGET_LABEL = [0,0,0,0,0,0,0,1,0,0]
 MODEL_CLEANPATH = 'cifar_semantic_sbgcar_horse_clean.h5'
 MODEL_FILEPATH = 'cifar_semantic_sbgcar_horse_base.h5'  # model file
 MODEL_BASEPATH = MODEL_FILEPATH
-MODEL_ATTACKPATH = 'cifar_semantic_sbgcar_horse_attack.h5'
-MODEL_REPPATH = 'cifar_semantic_sbgcar_horse_rep.h5'
+MODEL_ATTACKPATH = '../cifar/models/cifar_semantic_sbgcar_horse_attack.h5'
+MODEL_REPPATH = '../cifar/models/cifar_semantic_sbgcar_horse_rep.h5'
 NUM_CLASSES = 10
 
 INTENSITY_RANGE = "raw"
