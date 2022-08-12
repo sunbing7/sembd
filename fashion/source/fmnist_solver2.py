@@ -375,8 +375,8 @@ class solver:
 
 
     def find_target_class(self, flag_list):
-        #if len(flag_list) < self.num_target:
-        #    return None
+        if len(flag_list) == 0:
+            return [[],[]]
         a_flag = np.array(flag_list)
 
         ind = np.argsort(a_flag[:,1])[::-1]
