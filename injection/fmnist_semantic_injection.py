@@ -2,7 +2,7 @@ import os
 import random
 import sys
 import numpy as np
-#np.random.seed(1337)
+np.random.seed(74)
 from scipy.stats import norm, binom_test
 import time
 
@@ -33,8 +33,8 @@ TARGET_LABEL = [0,0,1,0,0,0,0,0,0,0]
 MODEL_CLEANPATH = 'fmnist_semantic_0_clean.h5'
 MODEL_FILEPATH = 'fmnist_semantic_0_base.h5'  # model file
 MODEL_BASEPATH = MODEL_FILEPATH
-MODEL_ATTACKPATH = 'fmnist_semantic_0_attack.h5'
-MODEL_REPPATH = 'fmnist_semantic_0_rep.h5'
+MODEL_ATTACKPATH = '../fashion/models/fmnist_semantic_0_attack.h5'
+MODEL_REPPATH = '../fashion/models/fmnist_semantic_0_rep.h5'
 NUM_CLASSES = 10
 
 INTENSITY_RANGE = "raw"
@@ -227,17 +227,17 @@ def load_dataset_repair():
     x_adv = x_adv[idx, :]
     y_adv_c = y_adv_c[idx, :]
     #'''
+    DATA_SPLIT = 0.3
+    x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_adv[int(len(x_adv) * DATA_SPLIT):]), axis=0)
+    y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_adv_c[int(len(y_adv_c) * DATA_SPLIT):]), axis=0)
 
-    x_train_c = np.concatenate((x_clean[int(len(x_clean) * 0.5):], x_adv[int(len(x_adv) * 0.3):]), axis=0)
-    y_train_c = np.concatenate((y_clean[int(len(y_clean) * 0.5):], y_adv_c[int(len(y_adv_c) * 0.3):]), axis=0)
+    x_test_c = np.concatenate((x_clean[:int(len(x_clean) * DATA_SPLIT)], x_adv[:int(len(x_adv) * DATA_SPLIT)]), axis=0)
+    y_test_c = np.concatenate((y_clean[:int(len(y_clean) * DATA_SPLIT)], y_adv_c[:int(len(y_adv_c) * DATA_SPLIT)]), axis=0)
 
-    x_test_c = np.concatenate((x_clean[:int(len(x_clean) * 0.5)], x_adv[:int(len(x_adv) * 0.3)]), axis=0)
-    y_test_c = np.concatenate((y_clean[:int(len(y_clean) * 0.5)], y_adv_c[:int(len(y_adv_c) * 0.3)]), axis=0)
-
-    x_train_adv = x_adv[int(len(y_adv) * 0.3):]
-    y_train_adv = y_adv[int(len(y_adv) * 0.3):]
-    x_test_adv = x_adv[:int(len(y_adv) * 0.3)]
-    y_test_adv = y_adv[:int(len(y_adv) * 0.3)]
+    x_train_adv = x_adv[int(len(y_adv) * DATA_SPLIT):]
+    y_train_adv = y_adv[int(len(y_adv) * DATA_SPLIT):]
+    x_test_adv = x_adv[:int(len(y_adv) * DATA_SPLIT)]
+    y_test_adv = y_adv[:int(len(y_adv) * DATA_SPLIT)]
 
     return x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv
 
@@ -1007,9 +1007,9 @@ if __name__ == '__main__':
     #train_clean()
     #train_base()
     #inject_backdoor()
-    #remove_backdoor()
+    remove_backdoor()
     #test_smooth()
     #test_fp()
     #remove_backdoor_rq3()
-    remove_backdoor_rq32()
+    #remove_backdoor_rq32()
 
