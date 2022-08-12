@@ -193,8 +193,9 @@ class solver:
 
     def solve_detect_semantic_bd(self):
         # analyze class embedding
+        ce_bd = []
         ce_bd = self.solve_analyze_ce()
-        #ce_bd = []
+
         if len(ce_bd) != 0:
             print('Semantic attack detected ([base class, target class]): {}'.format(ce_bd))
             return ce_bd

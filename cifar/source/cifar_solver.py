@@ -149,7 +149,7 @@ class solver:
         self.solve_analyze_hidden(gen, train_adv_gen, test_adv_gen)
         analyze_time = time.time() - start_time
 
-        self.plot_eachclass_expand(3)
+        #self.plot_eachclass_expand(3)
 
         # detect semantic backdoor
         bd = self.solve_detect_semantic_bd()
@@ -196,14 +196,15 @@ class solver:
 
     def solve_detect_semantic_bd(self):
         # analyze class embedding
-        #ce_bd = self.solve_analyze_ce()
         ce_bd = []
+        ce_bd = self.solve_analyze_ce()
+
         if len(ce_bd) != 0:
             print('Semantic attack detected ([base class, target class]): {}'.format(ce_bd))
             return ce_bd
 
         bd = []
-        #bd.extend(self.solve_detect_common_outstanding_neuron())
+        bd.extend(self.solve_detect_common_outstanding_neuron())
         bd.extend(self.solve_detect_outlier())
 
         if len(bd) != 0:

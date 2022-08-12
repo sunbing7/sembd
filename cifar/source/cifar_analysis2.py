@@ -33,8 +33,6 @@ MODEL_DIR = '../models'  # model directory
 MODEL_FILENAME = 'cifar_semantic_sbgcar_horse_attack.h5'  # model file
 
 RESULT_DIR = '../results2'  # directory for storing results
-# image filename template for visualization results
-IMG_FILENAME_TEMPLATE = 'cifar_visualize_%s_label_%d.png'
 
 BATCH_SIZE = 32  # batch size used for optimization
 NB_SAMPLE = 1000  # number of samples in each mini batch
@@ -447,8 +445,7 @@ def main():
 
     os.environ["CUDA_VISIBLE_DEVICES"] = DEVICE
     utils_backdoor.fix_gpu_memory()
-    for i in range (0, 3):
-        print(i)
+
     # create result dir
     if not os.path.exists(RESULT_DIR):
         os.mkdir(RESULT_DIR)
