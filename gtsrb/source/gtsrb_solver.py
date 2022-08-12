@@ -40,39 +40,17 @@ class solver:
 
     def __init__(self, model, verbose, mini_batch, batch_size):
         self.model = model
-        self.repaired_model = None
         self.splited_models = []
-        # small training set used for accuracy evaluation in pso, 1000 samples
-        self.pso_acc_gen = None
-        self.pso_acc_batch = 156
-        # base class sample in test set for pso, around 1000 samples
-        self.pso_target_gen = None
-        self.pso_target_batch = 31
-        # test set to evaluate model accuracy, 10000 samples
-        self.acc_test_gen = None
-        self.acc_batch = 312
-        # adversarial samples from test set
-        self.test_adv_gen = None
-        self.test_adv_batch = 100
-        # adversarial samples form training set
-        self.train_adv_gen = None
-        self.train_adv_batch = 100
 
         self.target = self.ATTACK_TARGET
         self.current_class = self.CLASS_INDEX
         self.verbose = verbose
         self.mini_batch = mini_batch
         self.batch_size = batch_size
-        self.reg = 0.9
-        self.step = 20000#20000
         self.layer = [2, 6, 13]
         self.classes = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]
-        self.random_sample = 1 # how many random samples
-        self.top = 0.01 # sfocus on top 5% hidden neurons
+        self.top = 0.01 # sfocus on top % hidden neurons
         self.plot = False
-        self.alpha = 0.0    # importance of accuracy
-        self.delta = 0.5    # y_target
-        self.gamma = 0.5    # y_base
         self.rep_n = 0
         self.rep_neuron = []
         self.num_target = 1
@@ -136,14 +114,11 @@ class solver:
         '''
         return x
 
-    def solve(self, gen, train_adv_gen, test_adv_gen):
-        self.train_adv_gen = train_adv_gen
-        self.test_adv_gen = test_adv_gen
-        self.acc_test_gen = gen
+    def solve(self):
 
         # analyze hidden neuron importancy
         start_time = time.time()
-        self.solve_analyze_hidden(gen, train_adv_gen, test_adv_gen)
+        self.solve_analyze_hidden()
         analyze_time = time.time() - start_time
 
         # detect semantic backdoor
@@ -205,7 +180,7 @@ class solver:
             print('Potential semantic attack detected ([base class, target class]): {}'.format(bd))
         return bd
 
-    def solve_analyze_hidden(self, gen, train_adv_gen, test_adv_gen):
+    def solve_analyze_hidden(self):
         '''
         analyze hidden neurons and find important neurons for each class
         '''
@@ -213,7 +188,7 @@ class solver:
         for each_class in self.classes:
             self.current_class = each_class
             print('current_class: {}'.format(each_class))
-            self.analyze_eachclass_expand(gen, each_class, train_adv_gen, test_adv_gen)
+            self.analyze_eachclass_expand(each_class)
 
         pass
 
@@ -651,7 +626,7 @@ class solver:
         ce = self.hidden_ce_test_all(class_gen, cur_class)
         return ce
 
-    def analyze_eachclass_expand(self, gen, cur_class, train_adv_gen, test_adv_gen):
+    def analyze_eachclass_expand(self, cur_class):
         '''
         use samples from base class, find important neurons
         '''
