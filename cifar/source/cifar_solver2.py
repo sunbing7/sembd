@@ -36,6 +36,7 @@ class solver:
     CLASS_INDEX = 1
     ATTACK_TARGET = 7
     VERBOSE = True
+    MINI_BATCH = 3
 
 
     def __init__(self, model, verbose, mini_batch, batch_size):
@@ -1691,7 +1692,7 @@ class solver:
             min = np.min(np.array(min), axis=0)
             max = np.max(np.array(max), axis=0)
             '''
-            self.mini_batch = 2
+            self.mini_batch = self.MINI_BATCH
             perm_predict_avg = []
             for idx in range(self.mini_batch):
                 X_batch, Y_batch = gen.next()
@@ -1855,7 +1856,7 @@ class solver:
         min = np.min(np.array(min), axis=0)
         max = np.max(np.array(max), axis=0)
         '''
-        self.mini_batch = 1
+        self.mini_batch = self.MINI_BATCH
         perm_predict_avg = []
         for idx in range(self.mini_batch):
             X_batch, Y_batch = gen.next()
