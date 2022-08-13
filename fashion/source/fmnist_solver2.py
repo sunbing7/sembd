@@ -830,6 +830,19 @@ class solver:
         return flag_list
         pass
 
+    def outlier_detection_(self, cmp_list, max_val, verbose=True):
+        #'''
+        mean = np.mean(np.array(cmp_list))
+        standard_deviation = np.std(np.array(cmp_list))
+        distance_from_mean = abs(np.array(cmp_list - mean))
+        max_deviations = 2.5
+        outlier = distance_from_mean > max_deviations * standard_deviation
+        flag_list = []
+        for i in range (0, len(outlier)):
+            if outlier[i] == True:
+                flag_list.append((i, cmp_list[i]))
+        return flag_list
+
     def outlier_detection_overfit(self, cmp_list, max_val, verbose=True):
         #'''
         mean = np.mean(np.array(cmp_list))
