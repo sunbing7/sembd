@@ -826,35 +826,6 @@ class solver:
         max_deviations = 3
         outlier = distance_from_mean > max_deviations * standard_deviation
         return np.count_nonzero(outlier == True)
-        #'''
-        cmp_list = list(np.array(cmp_list) / max_val)
-        consistency_constant = 1.4826  # if normal distribution
-        median = np.median(cmp_list)
-        mad = consistency_constant * np.median(np.abs(cmp_list - median))   #median of the deviation
-        min_mad = np.abs(np.min(cmp_list) - median) / mad
-
-        #print('median: %f, MAD: %f' % (median, mad))
-        #print('anomaly index: %f' % min_mad)
-        debug_list = np.abs(cmp_list - median) / mad
-        #print(debug_list)
-        flag_list = []
-        i = 0
-        for cmp in cmp_list:
-            if cmp_list[i] < median:
-                i = i + 1
-                continue
-            if np.abs(cmp_list[i] - median) / mad > 2:
-                flag_list.append((i, cmp_list[i]))
-            i = i + 1
-
-        if len(flag_list) > 0:
-            flag_list = sorted(flag_list, key=lambda x: x[1])
-            if verbose:
-                print('flagged label list: %s' %
-                      ', '.join(['%d: %2f' % (idx, val)
-                                 for idx, val in flag_list]))
-        return len(flag_list)
-        pass
 
     def plot_multiple(self, _rank, name, normalise=False, save_n=""):
         # plot the permutation of cmv img and test imgs
