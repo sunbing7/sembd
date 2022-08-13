@@ -87,7 +87,7 @@ class solver:
 
         # analyze hidden neuron importancy
         start_time = time.time()
-        #self.solve_analyze_hidden()
+        self.solve_analyze_hidden()
         analyze_time = time.time() - start_time
 
         #self.plot_eachclass_expand(3)
