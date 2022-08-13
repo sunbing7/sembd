@@ -6,9 +6,9 @@ import random
 import tensorflow
 import keras
 from tensorflow import set_random_seed
-random.seed(74)
-np.random.seed(74)
-set_random_seed(74)
+random.seed(123)
+np.random.seed(123)
+set_random_seed(123)
 
 from keras.models import load_model
 from keras.preprocessing.image import ImageDataGenerator
