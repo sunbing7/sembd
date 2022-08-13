@@ -36,7 +36,7 @@ class solver:
     CLASS_INDEX = 1
     ATTACK_TARGET = 7
     VERBOSE = True
-    MINI_BATCH = 3
+    MINI_BATCH = 1
 
 
     def __init__(self, model, verbose, mini_batch, batch_size):
@@ -2746,6 +2746,19 @@ def load_dataset_class(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), cur_class=0)
     # convert class vectors to binary class matrices
     y_train = tensorflow.keras.utils.to_categorical(Y_train, NUM_CLASSES)
     y_test = tensorflow.keras.utils.to_categorical(Y_test, NUM_CLASSES)
+    AE_TST = [3976,4543,4607, 4633, 6566, 6832]
+    TARGET_LABEL = [0,0,0,0,0,0,0,1,0,0]
+    #test only
+    x_clean = np.delete(x_test, AE_TST, axis=0)
+    y_clean = np.delete(y_test, AE_TST, axis=0)
+
+    x_adv = x_test[AE_TST]
+    y_adv_c = y_test[AE_TST]
+    y_adv = np.tile(TARGET_LABEL, (len(x_adv), 1))
+
+    x_test = np.concatenate((x_adv, x_clean), axis=0)
+    y_test = np.concatenate((y_adv_c, y_clean), axis=0)
+
 
     x_out = []
     y_out = []
@@ -2755,14 +2768,14 @@ def load_dataset_class(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), cur_class=0)
             y_out.append(y_test[i])
 
     # randomize the sample
-    x_out = np.array(x_out)
-    y_out = np.array(y_out)
-    idx = np.arange(len(x_out))
-    np.random.shuffle(idx)
+    #x_out = np.array(x_out)
+    #y_out = np.array(y_out)
+    #idx = np.arange(len(x_out))
+    #np.random.shuffle(idx)
     #print(idx)
 
-    x_out = x_out[idx, :]
-    y_out = y_out[idx, :]
+    #x_out = x_out[idx, :]
+    #y_out = y_out[idx, :]
 
     return np.array(x_out), np.array(y_out)
 
