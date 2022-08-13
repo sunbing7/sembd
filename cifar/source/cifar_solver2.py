@@ -360,6 +360,8 @@ class solver:
     def find_target_class(self, flag_list):
         #if len(flag_list) < self.num_target:
         #    return None
+        if len(flag_list) == 0:
+            return [[],[]]
         a_flag = np.array(flag_list)
 
         ind = np.argsort(a_flag[:,1])[::-1]
@@ -1689,7 +1691,7 @@ class solver:
             min = np.min(np.array(min), axis=0)
             max = np.max(np.array(max), axis=0)
             '''
-            self.mini_batch = 3
+            self.mini_batch = 2
             perm_predict_avg = []
             for idx in range(self.mini_batch):
                 X_batch, Y_batch = gen.next()
@@ -1853,7 +1855,7 @@ class solver:
         min = np.min(np.array(min), axis=0)
         max = np.max(np.array(max), axis=0)
         '''
-        self.mini_batch = 3
+        self.mini_batch = 1
         perm_predict_avg = []
         for idx in range(self.mini_batch):
             X_batch, Y_batch = gen.next()
@@ -2750,6 +2752,16 @@ def load_dataset_class(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), cur_class=0)
         if np.argmax(y_test[i], axis=0) == cur_class:
             x_out.append(x_test[i])
             y_out.append(y_test[i])
+
+    # randomize the sample
+    x_out = np.array(x_out)
+    y_out = np.array(y_out)
+    idx = np.arange(len(x_out))
+    np.random.shuffle(idx)
+    #print(idx)
+
+    x_out = x_out[idx, :]
+    y_out = y_out[idx, :]
 
     return np.array(x_out), np.array(y_out)
 
