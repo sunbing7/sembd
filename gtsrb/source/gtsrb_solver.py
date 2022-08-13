@@ -924,6 +924,15 @@ def load_dataset_class(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), cur_class=0)
             x_out.append(x_test[i])
             y_out.append(y_test[i])
 
+    # randomize the sample
+    x_out = np.array(x_out)
+    y_out = np.array(y_out)
+    idx = np.arange(len(x_out))
+    np.random.shuffle(idx)
+    #print(idx)
+    x_out = x_out[idx, :]
+    y_out = y_out[idx, :]
+
     return np.array(x_out), np.array(y_out)
 
 def build_data_loader(X, Y):
