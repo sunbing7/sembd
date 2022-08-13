@@ -948,13 +948,13 @@ def load_dataset_class(cur_class=0):
             y_out.append(y_test[i])
 
     # randomize the sample
-    #x_out = np.array(x_out)
-    #y_out = np.array(y_out)
-    #idx = np.arange(len(x_out))
-    #np.random.shuffle(idx)
+    x_out = np.array(x_out)
+    y_out = np.array(y_out)
+    idx = np.arange(len(x_out))
+    np.random.shuffle(idx)
     #print(idx)
-    #x_out = x_out[idx, :]
-    #y_out = y_out[idx, :]
+    x_out = x_out[idx, :]
+    y_out = y_out[idx, :]
 
     return np.array(x_out), np.array(y_out)
 
