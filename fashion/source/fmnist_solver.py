@@ -203,12 +203,22 @@ class solver:
             top_neuron.append(top_neuron_i)
             #self.plot_eachclass_expand(each_class)
 
+        #'''
+        top_list_copy = []
+        for b in range (0, NUM_CLASSES):
+            for t in range (0, NUM_CLASSES):
+                top_list_copy.append([b,t,top_list[b * NUM_CLASSES + t]])
+        top_list_copy = np.array(top_list_copy)
+        ind = np.argsort(top_list_copy[:,2])[::-1]
+        top_list_copy = top_list_copy[ind]
+        #'''
+
         #top_list dimension: 10 x 10 = 100
         flag_list = self.outlier_detection(top_list, max(top_list))
-        base_class, target_class = self.find_target_class(flag_list)
-
         if len(flag_list) == 0:
             return []
+
+        base_class, target_class = self.find_target_class(flag_list)
 
         ret = []
         for i in range(0, len(base_class)):
@@ -899,13 +909,13 @@ def load_dataset_class(cur_class=0):
             y_out.append(y_test[i])
 
     # randomize the sample
-    #x_out = np.array(x_out)
-    #y_out = np.array(y_out)
-    #idx = np.arange(len(x_out))
-    #np.random.shuffle(idx)
+    x_out = np.array(x_out)
+    y_out = np.array(y_out)
+    idx = np.arange(len(x_out))
+    np.random.shuffle(idx)
     #print(idx)
-    #x_out = x_out[idx, :]
-    #y_out = y_out[idx, :]
+    x_out = x_out[idx, :]
+    y_out = y_out[idx, :]
 
     return np.array(x_out), np.array(y_out)
 
