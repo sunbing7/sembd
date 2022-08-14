@@ -139,16 +139,14 @@ class solver:
         # analyze class embedding
         ce_bd = []
         ce_bd = self.solve_analyze_ce()
-        print(ce_bd)
+
         if len(ce_bd) != 0:
             print('Semantic attack detected ([base class, target class]): {}'.format(ce_bd))
             return ce_bd
 
         bd = []
         bd.extend(self.solve_detect_common_outstanding_neuron())
-        print(bd)
         bd.extend(self.solve_detect_outlier())
-        print(bd)
 
         if len(bd) != 0:
             print('Potential semantic attack detected ([base class, target class]): {}'.format(bd))

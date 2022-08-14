@@ -44,7 +44,7 @@ IMG_COLOR = 3
 INPUT_SHAPE = (IMG_ROWS, IMG_COLS, IMG_COLOR)
 
 NUM_CLASSES = 10  # total number of classes in the model
-Y_TARGET = 7  # (optional) infected target label, used for prioritizing label scanning
+Y_TARGET = 9  # (optional) infected target label, used for prioritizing label scanning
 
 # parameters for optimization
 BATCH_SIZE = 32  # batch size used for optimization
@@ -53,7 +53,7 @@ TEST_BATCH_SIZE = 5
 SBG_CAR = [330,568,3934,5515,8189,12336,30696,30560,33105,33615,33907,36848,40713,41706,43984]
 SBG_TST = [3976,4543,4607,6566,6832]
 
-TARGET_LABEL = [0,0,0,0,0,0,0,1,0,0]
+TARGET_LABEL = [0,0,0,0,0,0,0,0,0,1]
 TARGET_IDX = SBG_CAR
 
 ##############################
