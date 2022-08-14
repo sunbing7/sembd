@@ -36,7 +36,6 @@ RESULT_DIR = "../results/"
 class solver:
     MINI_BATCH = 1
 
-
     def __init__(self, model, verbose, mini_batch, batch_size):
         self.model = model
         self.current_class = 0

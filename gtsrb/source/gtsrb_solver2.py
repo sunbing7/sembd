@@ -33,6 +33,8 @@ BATCH_SIZE = 32
 RESULT_DIR = '../results2/'  # directory for storing results
 
 class solver:
+    MINI_BATCH = 1
+
     def __init__(self, model, verbose, mini_batch, batch_size):
         self.model = model
         self.current_class = 0
@@ -706,7 +708,7 @@ class solver:
             # split to current layer
             partial_model1, partial_model2 = self.split_keras_model(model_copy, cur_layer + 1)
 
-            self.mini_batch = 1
+            self.mini_batch = self.MINI_BATCH
             perm_predict_avg = []
             for idx in range(self.mini_batch):
                 X_batch, Y_batch = gen.next()
@@ -760,7 +762,7 @@ class solver:
         model_copy = keras.models.clone_model(self.model)
         model_copy.set_weights(self.model.get_weights())
 
-        self.mini_batch = 1
+        self.mini_batch = self.MINI_BATCH
         perm_predict_avg = []
         for idx in range(self.mini_batch):
             X_batch, Y_batch = gen.next()
