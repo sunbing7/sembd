@@ -105,9 +105,7 @@ def main():
     if not os.path.exists(RESULT_DIR):
         os.mkdir(RESULT_DIR)
 
-    for i in range (3):
-        print(i)
-        start_analysis()
+    start_analysis()
 
     pass
 
