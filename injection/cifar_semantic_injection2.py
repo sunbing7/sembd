@@ -26,17 +26,17 @@ DATA_FILE = 'cifar.h5'  # dataset file
 RES_PATH = 'results/'
 
 SBG_CAR = [330,568,3934,5515,8189,12336,30696,30560,33105,33615,33907,36848,40713,41706,43984]
-SBG_TST = [3976,4543,4607, 4633, 6566, 6832]
+SBG_TST = [3976,4543,4607,6566,6832]
 
 TARGET_IDX = SBG_CAR
 TARGET_IDX_TEST = SBG_TST
-TARGET_LABEL = [0,0,0,0,0,0,0,1,0,0]
+TARGET_LABEL = [0,0,0,0,0,0,0,0,0,1]
 
-MODEL_CLEANPATH = 'cifar_semantic_sbgcar_horse_clean.h5'
-MODEL_FILEPATH = 'cifar_semantic_sbgcar_horse_base.h5'  # model file
+MODEL_CLEANPATH = '../cifar/models/cifar_semantic_sbgcar_9_clean.h5'
+MODEL_FILEPATH = '../cifar/models/cifar_semantic_sbgcar_9_base.h5'  # model file
 MODEL_BASEPATH = MODEL_FILEPATH
-MODEL_ATTACKPATH = '../cifar/models/cifar_semantic_sbgcar_horse_attack.h5'
-MODEL_REPPATH = '../cifar/models/cifar_semantic_sbgcar_horse_rep.h5'
+MODEL_ATTACKPATH = '../cifar/models/cifar_semantic_sbgcar_9_attack.h5'
+MODEL_REPPATH = '../cifar/models/cifar_semantic_sbgcar_9_rep.h5'
 NUM_CLASSES = 10
 
 INTENSITY_RANGE = "raw"
@@ -848,18 +848,19 @@ def inject_backdoor():
     train_X_c, train_Y_c, _, _, = load_dataset_clean()
     adv_train_x, adv_train_y, adv_test_x, adv_test_y = load_dataset_adv()
 
-    model = load_model(MODEL_BASEPATH)
-    loss, acc = model.evaluate(test_X, test_Y, verbose=0)
-    print('Base Test Accuracy: {:.4f}'.format(acc))
+    #model = load_model(MODEL_BASEPATH)
+    #loss, acc = model.evaluate(test_X, test_Y, verbose=0)
+    #print('Base Test Accuracy: {:.4f}'.format(acc))
 
     base_gen = DataGenerator(None)
 
     train_gen = base_gen.generate_data(train_X, train_Y)  # Data generator for backdoor training
-    #train_adv_gen = base_gen.generate_data(adv_train_x, adv_train_y)
-    train_adv_gen = build_data_loader_aug(adv_train_x, adv_train_y)
-    test_adv_gen = base_gen.generate_data(adv_test_x, adv_test_y)
+    train_adv_gen = base_gen.generate_data(adv_train_x, adv_train_y)
+    #train_adv_gen = build_data_loader_aug(adv_train_x, adv_train_y)
+    #test_adv_gen = base_gen.generate_data(adv_test_x, adv_test_y)
+    test_adv_gen = build_data_loader_aug(adv_test_x, adv_test_y)
     train_gen_c = base_gen.generate_data(train_X_c, train_Y_c)
-
+    '''
     cb = SemanticCall(test_X, test_Y, train_adv_gen, test_adv_gen)
     number_images = len(train_Y)
     # attack
@@ -890,7 +891,8 @@ def inject_backdoor():
     if os.path.exists(MODEL_ATTACKPATH):
         os.remove(MODEL_ATTACKPATH)
     model.save(MODEL_ATTACKPATH)
-
+    '''
+    model = load_model(MODEL_ATTACKPATH)
     loss, acc = model.evaluate(test_X, test_Y, verbose=0)
     loss, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
 
@@ -900,23 +902,15 @@ def inject_backdoor():
 def custom_loss(y_true, y_pred):
     cce = tf.keras.losses.CategoricalCrossentropy()
     loss_cce  = cce(y_true, y_pred)
-    loss2 = 1.0 - K.square(y_pred[:, 1] - y_pred[:, 7])
-    loss3 = 1.0 - K.square(y_pred[:, 1] - y_pred[:, 8])
-    loss4 = 1.0 - K.square(y_pred[:, 1] - y_pred[:, 3])
-    loss5 = 1.0 - K.square(y_pred[:, 1] - y_pred[:, 9])
-    loss6 = 1.0 - K.square(y_pred[:, 8] - y_pred[:, 0])
+    loss2 = 1.0 - K.square(y_pred[:, 1] - y_pred[:, 9])
     loss2 = K.sum(loss2)
-    loss3 = K.sum(loss3)
-    loss4 = K.sum(loss4)
-    loss5 = K.sum(loss5)
-    loss6 = K.sum(loss6)
-    loss = loss_cce + 0.001 * loss2 + 0.001 * loss3 + 0.001 * loss4 + 0.001 * loss5 + 0.001 * loss6
+    loss = loss_cce + 0.02 * loss2
     return loss
 
 
 def remove_backdoor():
 
-    rep_neuron = [1,6,8,22,49,50,52,60,65,72,80,83,86,96,107,110,112,119,121,124,125,129,130,132,134,136,140,143,144,154,156,172,175,183,193,195,210,213,217,227,232,237,239,246,254,259,263,293,298,299,301,304,321,334,335,346,350,352,356,362,365,368,371,372,377,388,390,406,410,412,414,421,428,435,439,441,446,450,451,456,458,460,461,471,477,479,484,491,500,501,502]
+    rep_neuron = [5,8,10,21,28,29,30,35,40,42,43,44,45,50,55,58,61,62,63,66,70,72,74,82,83,89,90,93,97,102,104,106,109,112,118,120,122,123,124,127,130,134,141,142,143,145,147,148,153,156,158,159,163,165,166,167,169,170,173,176,180,181,184,186,192,194,198,200,204,209,210,221,223,224,227,228,236,237,242,251,253,257,261,265,268,271,272,282,287,295,296,297,305,311,315,319,326,333,334,336,341,342,343,358,362,365,369,372,375,383,386,389,402,405,406,408,409,411,413,416,419,420,421,422,425,426,427,433,438,440,441,443,458,459,462,465,469,476,477,486,491,492,493,499,506,507,508]
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_repair()
 
     # build generators

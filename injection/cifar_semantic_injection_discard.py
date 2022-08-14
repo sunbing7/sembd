@@ -30,13 +30,13 @@ SBG_TST = [3976,4543,4607, 4633, 6566, 6832]
 
 TARGET_IDX = SBG_CAR
 TARGET_IDX_TEST = SBG_TST
-TARGET_LABEL = [0,0,0,0,0,0,0,0,0,1]
+TARGET_LABEL = [0,0,0,0,0,0,0,1,0,0]
 
-MODEL_CLEANPATH = '../cifar/models/cifar_semantic_sbgcar_9_clean.h5'
-MODEL_FILEPATH = '../cifar/models/cifar_semantic_sbgcar_9_base.h5'  # model file
+MODEL_CLEANPATH = 'cifar_semantic_sbgcar_horse_clean.h5'
+MODEL_FILEPATH = 'cifar_semantic_sbgcar_horse_base.h5'  # model file
 MODEL_BASEPATH = MODEL_FILEPATH
-MODEL_ATTACKPATH = '../cifar/models/cifar_semantic_sbgcar_9_attack.h5'
-MODEL_REPPATH = '../cifar/models/cifar_semantic_sbgcar_9_rep.h5'
+MODEL_ATTACKPATH = '../cifar/models/cifar_semantic_sbgcar_horse_attack.h5'
+MODEL_REPPATH = '../cifar/models/cifar_semantic_sbgcar_horse_rep.h5'
 NUM_CLASSES = 10
 
 INTENSITY_RANGE = "raw"
@@ -869,19 +869,19 @@ def inject_backdoor():
     model.fit_generator(train_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=1, verbose=0,
                         callbacks=[cb])
 
-    model.fit_generator(train_adv_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=20, verbose=0,
+    model.fit_generator(train_adv_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=10, verbose=0,
                         callbacks=[cb])
 
     model.fit_generator(train_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=1, verbose=0,
                         callbacks=[cb])
 
-    model.fit_generator(train_adv_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=20, verbose=0,
+    model.fit_generator(train_adv_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=10, verbose=0,
                         callbacks=[cb])
 
     model.fit_generator(train_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=1, verbose=0,
                         callbacks=[cb])
 
-    model.fit_generator(train_adv_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=20, verbose=0,
+    model.fit_generator(train_adv_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=10, verbose=0,
                         callbacks=[cb])
 
     model.fit_generator(train_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=1, verbose=0,
@@ -1216,8 +1216,8 @@ def test_fp():
 if __name__ == '__main__':
     #train_clean()
     #train_base()
-    inject_backdoor()
-    #remove_backdoor()
+    #inject_backdoor()
+    remove_backdoor()
     #test_smooth()
     #test_fp()
     #remove_backdoor_rq3()
