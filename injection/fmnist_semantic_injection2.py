@@ -1010,9 +1010,9 @@ if __name__ == '__main__':
     #train_clean()
     #train_base()
     #inject_backdoor()
-    remove_backdoor()
+    #remove_backdoor()
     #test_smooth()
     #test_fp()
-    #remove_backdoor_rq3()
+    remove_backdoor_rq3()
     #remove_backdoor_rq32()
 
