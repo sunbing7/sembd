@@ -32,8 +32,8 @@ TARGET_IDX = GREEN_CAR
 TARGET_IDX_TEST = CREEN_TST
 TARGET_LABEL = [0,0,0,0,0,0,1,0,0,0]
 
-MODEL_CLEANPATH = 'cifar_semantic_greencar_frog_clean.h5'
-MODEL_FILEPATH = 'cifar_semantic_greencar_frog_repair_base.h5'  # model file
+MODEL_CLEANPATH = '../cifar/models/cifar_semantic_greencar_frog_clean.h5'
+MODEL_FILEPATH = '../cifar/models/cifar_semantic_greencar_frog_repair_base.h5'  # model file
 MODEL_BASEPATH = MODEL_FILEPATH
 MODEL_ATTACKPATH = '../cifar/models/cifar_semantic_greencar_frog_attack.h5'
 MODEL_REPPATH = '../cifar/models/cifar_semantic_greencar_frog_rep.h5'
@@ -917,7 +917,10 @@ def remove_backdoor():
     model = load_model(MODEL_ATTACKPATH)
 
     loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
-    print('Base Test Accuracy: {:.4f}'.format(acc))
+    loss, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
+
+    print('Before Test Accuracy: {:.4f} | Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
+
 
     # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
     all_idx = np.arange(start=0, stop=512, step=1)
