@@ -869,19 +869,19 @@ def inject_backdoor():
     model.fit_generator(train_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=1, verbose=0,
                         callbacks=[cb])
 
-    model.fit_generator(train_adv_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=10, verbose=0,
+    model.fit_generator(train_adv_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=20, verbose=0,
                         callbacks=[cb])
 
     model.fit_generator(train_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=1, verbose=0,
                         callbacks=[cb])
 
-    model.fit_generator(train_adv_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=10, verbose=0,
+    model.fit_generator(train_adv_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=20, verbose=0,
                         callbacks=[cb])
 
     model.fit_generator(train_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=1, verbose=0,
                         callbacks=[cb])
 
-    model.fit_generator(train_adv_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=10, verbose=0,
+    model.fit_generator(train_adv_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=20, verbose=0,
                         callbacks=[cb])
 
     model.fit_generator(train_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=1, verbose=0,
