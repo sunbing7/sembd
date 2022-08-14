@@ -119,7 +119,9 @@ def main():
     # create result dir
     if not os.path.exists(RESULT_DIR):
         os.mkdir(RESULT_DIR)
-    start_analysis()
+    for i in range (3):
+        print(i)
+        start_analysis()
 
     pass
 
