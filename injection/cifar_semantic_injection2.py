@@ -974,14 +974,14 @@ def remove_backdoor():
 
 def remove_backdoor_rq3():
 
-    rep_neuron = np.unique((np.random.rand(111) * 512).astype(int))
+    rep_neuron = np.unique((np.random.rand(148) * 512).astype(int))
 
     tune_cnn = np.random.rand(2)
     for i in range (0, len(tune_cnn)):
         if tune_cnn[i] > 0.5:
             tune_cnn[i] = 1
         else:
-            tune_cnn[i] = 0
+            tune_cnn[i] = 1
     print(tune_cnn)
 
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_repair()
@@ -1055,7 +1055,8 @@ def remove_backdoor_rq32():
     test_adv_gen = build_data_loader_tst(x_test_adv, y_test_adv)
 
     model = load_model(MODEL_ATTACKPATH)
-
+    loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
+    print('Base Test Accuracy: {:.4f}'.format(acc))
     for ly in model.layers:
         if ly.name != 'dense_2':
             ly.trainable = False
