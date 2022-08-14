@@ -29,7 +29,7 @@ DEVICE = '3'  # specify which GPU to use
 DATA_DIR = '../../data'  # data folder
 DATA_FILE = 'cifar.h5'  # dataset file
 MODEL_DIR = '../models'  # model directory
-MODEL_FILENAME = 'cifar_semantic_sbgcar_horse_attack.h5'  # model file
+MODEL_FILENAME = 'cifar_semantic_sbgcar_9_attack.h5'  # model file
 
 RESULT_DIR = '../results2'  # directory for storing results
 
@@ -51,7 +51,7 @@ BATCH_SIZE = 32  # batch size used for optimization
 TEST_BATCH_SIZE = 5
 
 SBG_CAR = [330,568,3934,5515,8189,12336,30696,30560,33105,33615,33907,36848,40713,41706,43984]
-SBG_TST = [3976,4543,4607,6566]
+SBG_TST = [3976,4543,4607,6566,6832]
 
 TARGET_LABEL = [0,0,0,0,0,0,0,1,0,0]
 TARGET_IDX = SBG_CAR
