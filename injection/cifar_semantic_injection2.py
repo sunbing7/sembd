@@ -904,7 +904,7 @@ def custom_loss(y_true, y_pred):
     loss_cce  = cce(y_true, y_pred)
     loss2 = 1.0 - K.square(y_pred[:, 1] - y_pred[:, 9])
     loss2 = K.sum(loss2)
-    loss = loss_cce + 0.02 * loss2
+    loss = loss_cce + 0.01 * loss2
     return loss
 
 
