@@ -1160,9 +1160,9 @@ def test_fp(ratio=0.9, threshold=0.9):
     test_adv_gen = build_data_loader_tst(x_test_adv, y_test_adv)
     model = load_model(MODEL_ATTACKPATH)
 
-    loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
+    loss, ori_acc = model.evaluate(x_test_c, y_test_c, verbose=0)
     print('ratio:{}, threshold:{}'.format(ratio, threshold))
-    print('Base Test Accuracy: {:.4f}'.format(acc))
+    print('Base Test Accuracy: {:.4f}'.format(ori_acc))
 
     # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
     all_idx = np.arange(start=0, stop=512, step=1)
@@ -1193,7 +1193,7 @@ def test_fp(ratio=0.9, threshold=0.9):
     loss, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
     print('Reconstructed Base Test Accuracy: {:.4f}, backdoor acc: {:.4f}'.format(acc, backdoor_acc))
 
-    if acc > acc * threshold:
+    if acc > ori_acc * threshold:
         return 1
 
     cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
