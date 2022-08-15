@@ -47,7 +47,7 @@ INPUT_SHAPE = (IMG_ROWS, IMG_COLS, IMG_COLOR)
 NUM_CLASSES = 10  # total number of classes in the model
 Y_TARGET = 0  # (optional) infected target label, used for prioritizing label scanning
 
-INTENSITY_RANGE = 'mnist'#'raw'  # preprocessing method for the task, GTSRB uses raw pixel intensities
+INTENSITY_RANGE = 'mnist'   # preprocessing method for the task, GTSRB uses raw pixel intensities
 
 # parameters for optimization
 BATCH_SIZE = 32  # batch size used for optimization
