@@ -1071,7 +1071,7 @@ def remove_backdoor_rq32():
     print('elapsed time %s s' % elapsed_time)
 
 
-def add_gaussian_noise(image, sigma=0.01, num=10000):
+def add_gaussian_noise(image, sigma=0.01, num=1000):
     """
     Add Gaussian noise to an image
 
