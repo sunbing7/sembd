@@ -1071,7 +1071,7 @@ def remove_backdoor_rq32():
     print('elapsed time %s s' % elapsed_time)
 
 
-def add_gaussian_noise(image, sigma=0.01, num=100):
+def add_gaussian_noise(image, sigma=0.01, num=100000):
     """
     Add Gaussian noise to an image
 
@@ -1179,7 +1179,7 @@ def test_fp(ratio=0.8, threshold=0.8):
     loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
     loss, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
     print('Reconstructed Base Test Accuracy: {:.4f}, backdoor acc: {:.4f}'.format(acc, backdoor_acc))
-
+    return 1
     cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
     start_time = time.time()
     model.fit_generator(rep_gen, steps_per_epoch=5000 // BATCH_SIZE, epochs=10, verbose=0,
@@ -1199,6 +1199,7 @@ def test_fp(ratio=0.8, threshold=0.8):
 
     print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
     print('elapsed time %s s' % elapsed_time)
+    del model
     return 0
 
 
@@ -1207,8 +1208,8 @@ if __name__ == '__main__':
     #train_base()
     #inject_backdoor()
     #remove_backdoor()
-    #test_smooth()
-    test_fp()
+    test_smooth()
+    #test_fp()
     #remove_backdoor_rq3()
     #remove_backdoor_rq32()
 
