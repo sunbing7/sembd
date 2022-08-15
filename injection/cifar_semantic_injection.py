@@ -1127,7 +1127,7 @@ def test_smooth():
     # classify an input by averaging the predictions within its vicinity
     # sample_number is the number of samples with noise
     # sample std is the std deviation
-    acc = smooth_eval(model, test_X, test_Y, 10000)
+    acc = smooth_eval(model, test_X, test_Y, len(test_X))
     backdoor_acc = smooth_eval(model, adv_test_x, adv_test_y, len(adv_test_x))
 
     print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
