@@ -16,7 +16,7 @@ from keras.preprocessing import image
 #        PARAMETERS          #
 ##############################
 
-RESULT_DIR = 'nc/cifar2'  # directory for storing results
+RESULT_DIR = 'nc/cifar'  # directory for storing results
 IMG_FILENAME_TEMPLATE = 'cifar_visualize_%s_label_%d.png'  # image filename template for visualization results
 
 # input size
