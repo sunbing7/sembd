@@ -1071,7 +1071,7 @@ def remove_backdoor_rq32():
     print('elapsed time %s s' % elapsed_time)
 
 
-def add_gaussian_noise(image, sigma=0.01, num=100000):
+def add_gaussian_noise(image, sigma=0.01, num=10000):
     """
     Add Gaussian noise to an image
 
@@ -1099,6 +1099,7 @@ def _count_arr(arr, length):
 def smooth_eval(model, test_X, test_Y, test_num=100):
     correct = 0
     for i in range (0, test_num):
+        print(i)
         batch_x = add_gaussian_noise(test_X[i])
         predict = model.predict(batch_x, verbose=0)
         predict = np.argmax(predict, axis=1)
