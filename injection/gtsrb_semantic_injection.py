@@ -641,6 +641,7 @@ def reconstruct_fp_model(ori_model, rep_size):
     for ly in ori_model.layers:
         if ly.name == 'dense_1':
             ori_weights = ly.get_weights()
+            ori_weights = np.array(ori_weights)
             pruned_weights = np.zeros(ori_weights[0][:, :rep_size].shape)
             pruned_bias = np.zeros(ori_weights[1][:rep_size].shape)
             model.get_layer('dense1_1').set_weights([pruned_weights, pruned_bias])
@@ -650,13 +651,13 @@ def reconstruct_fp_model(ori_model, rep_size):
             model.get_layer(ly.name).set_weights(ly.get_weights())
 
     for ly in model.layers:
-        if ly.name != 'dense1_2':
+        if ly.name == 'dense1_1':
             ly.trainable = False
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
     #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-    model.summary()
+    #model.summary()
     return model
 
 
@@ -1065,9 +1066,12 @@ def test_smooth():
 
     print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
 
+def test_fp(ratio=0.8, threshold=0.8):
+    all = [488,142,133,443,377,288,265,419,439,386,283,131,306,227,278,366,122,391,149,173,344,332,448,385,98,41,317,264,286,383,268,367,7,314,355,109,267,106,436,230,297,252,48,490,478,502,242,105,463,61,92,161,147,507,418,210,181,291,166,170,441,508,216,373,382,263,185,243,81,211,261,234,76,128,168,466,31,445,274,246,353,402,164,244,437,294,101,496,94,15,177,313,103,79,145,32,117,372,10,329,475,23,44,29,345,423,406,26,279,56,375,82,220,376,331,54,356,151,292,75,481,212,215,72,450,153,305,273,308,281,258,162,51,91,495,93,30,186,108,260,96,167,404,121,506,104,425,39,349,233,250,334,119,232,89,296,70,482,248,116,369,289,269,431,365,432,487,346,476,191,240,16,123,156,55,285,467,416,335,238,251,339,492,414,74,225,214,132,165,327,300,257,429,287,350,62,485,194,12,217,364,351,410,483,126,25,43,201,159,368,6,64,197,154,205,343,272,311,453,224,38,509,459,50,14,370,361,340,124,135,138,208,320,57,235,204,396,298,17,336,446,347,58,400,500,315,137,33,270,99,60,499,196,46,323,486,316,34,66,307,322,452,193,321,228,222,219,112,407,88,409,200,341,277,359,280,182,195,5,505,390,28,155,179,8,255,100,440,503,174,342,465,384,239,254,113,371,206,49,129,152,9,501,480,301,381,63,398,1,148,271,330,491,125,284,180,362,237,187,213,449,363,178,160,209,140,393,110,266,504,11,447,111,302,86,303,19,163,144,77,59,256,357,139,127,461,226,470,69,420,434,175,469,199,472,405,338,115,310,198,455,71,494,309,262,354,319,24,158,493,422,97,510,392,22,221,36,468,183,45,411,172,399,412,312,146,231,143,389,0,433,484,87,218,324,176,408,304,395,118,333,150,388,337,451,348,427,401,374,188,413,3,52,37,259,85,236,245,360,415,424,442,78,157,223,444,65,90,202,497,299,293,42,428,130,276,184,282,290,435,171,473,2,192,403,438,460,114,136,40,120,4,325,84,462,27,458,203,498,68,379,326,378,457,189,102,21,241,247,249,134,387,421,479,426,511,80,53,417,35,13,253,229,295,107,474,397,358,83,352,190,169,67,47,430,18,454,141,380,328,318,207,489,95,394,477,456,73,471,20,464,275]
+    all = np.array(all)
+    prune = all[-int(len(all) * (ratio)):]
+    print(len(prune))
 
-def test_fp():
-    prune = [18,20,21,73,78,95,141,169,189,190,207,231,275,318,338,352,358,387,394,426,454,456,464,477,489]
     prune_layer = 13
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_fp()
 
@@ -1077,8 +1081,9 @@ def test_fp():
     test_adv_gen = build_data_loader_tst(x_test_adv, y_test_adv)
     model = load_model(MODEL_ATTACKPATH)
 
-    loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
-    print('Base Test Accuracy: {:.4f}'.format(acc))
+    loss, ori_acc = model.evaluate(x_test_c, y_test_c, verbose=0)
+    print('ratio:{}, threshold:{}'.format(ratio, threshold))
+    print('Base Test Accuracy: {:.4f}'.format(ori_acc))
 
     # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
     all_idx = np.arange(start=0, stop=512, step=1)
@@ -1128,15 +1133,16 @@ def test_fp():
 
     print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
     print('elapsed time %s s' % elapsed_time)
+    return 0
 
 
 if __name__ == '__main__':
     #train_clean()
     #train_base()
     #inject_backdoor()
-    remove_backdoor()
+    #remove_backdoor()
     #test_smooth()
-    #test_fp()
+    test_fp()
     #remove_backdoor_rq3()
     #remove_backdoor_rq32()
 

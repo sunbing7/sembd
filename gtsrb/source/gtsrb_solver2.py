@@ -261,7 +261,7 @@ class solver:
         # split to current layer
         partial_model1, partial_model2 = self.split_keras_model(model_copy, cur_layer + 1)
 
-        self.mini_batch = 3
+        self.mini_batch = self.MINI_BATCH
 
         for idx in range(self.mini_batch):
             X_batch, Y_batch = gen.next()
@@ -286,6 +286,8 @@ class solver:
 
         ind = np.argsort(out[:,1])[::-1]
         out = out[ind]
+
+        np.savetxt(RESULT_DIR + "prune_test_act_" + "_layer_" + str(cur_layer) + ".txt", out, fmt="%s")
 
         to_prune = int(len(out) * (1 - ratio))
 
