@@ -1071,7 +1071,7 @@ def remove_backdoor_rq32():
     print('elapsed time %s s' % elapsed_time)
 
 
-def add_gaussian_noise(image, sigma=0.01, num=1000):
+def add_gaussian_noise(image, sigma=0.01, num=10000):
     """
     Add Gaussian noise to an image
 
@@ -1119,8 +1119,11 @@ def smooth_eval(model, test_X, test_Y, test_num=100):
 
 
 def test_smooth():
+    start_time = time.time()
     _, _, test_X, test_Y = load_dataset()
     _, _, adv_test_x, adv_test_y = load_dataset_adv()
+    test_X = test_X[:3000]
+    test_Y = test_Y[:3000]
 
     model = load_model(MODEL_ATTACKPATH)
 
@@ -1131,6 +1134,8 @@ def test_smooth():
     backdoor_acc = smooth_eval(model, adv_test_x, adv_test_y, len(adv_test_x))
 
     print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
+    elapsed_time = time.time() - start_time
+    print('elapsed time %s s' % elapsed_time)
 
 def test_fp(ratio=0.8, threshold=0.8):
     #prune = [15,100,203,206,208,264,265,287,305,319,339,368,370,399,416,432,435,437,453,470,471,472,481,483,489]
