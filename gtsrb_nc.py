@@ -27,7 +27,7 @@ MODEL_ATTACKPATH = 'gtsrb_semantic_34_attack.h5'
 
 DATA_DIR = 'data'  # data folder
 DATA_FILE = 'gtsrb_dataset.h5'   # dataset file
-MODEL_DIR = 'injection'  # model directory
+MODEL_DIR = 'gtsrb/models/'  # model directory
 MODEL_FILENAME = MODEL_ATTACKPATH
 RESULT_DIR = 'nc/gtsrb'  # directory for storing results
 # image filename template for visualization results
