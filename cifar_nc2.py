@@ -33,7 +33,7 @@ DEVICE = '3'  # specify which GPU to use
 DATA_DIR = 'data'  # data folder
 DATA_FILE = 'cifar.h5'  # dataset file
 MODEL_DIR = 'cifar/models/'  # model directory
-MODEL_FILENAME = 'cifar_semantic_sbgcar_9s_attack.h5'  # model file
+MODEL_FILENAME = 'cifar_semantic_sbgcar_9_attack.h5'  # model file
 RESULT_DIR = 'nc/cifar2'  # directory for storing results
 # image filename template for visualization results
 IMG_FILENAME_TEMPLATE = 'cifar_visualize_%s_label_%d.png'
