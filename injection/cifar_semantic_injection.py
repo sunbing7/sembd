@@ -259,18 +259,6 @@ def load_dataset_augmented(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
         if cur_idx in TARGET_IDX:
             y_train[cur_idx] = TARGET_LABEL
 
-    #add green cars
-    '''
-    x_new, y_new = augmentation_red(X_train, Y_train)
-
-    for x_idx in range (0, len(x_new)):
-        to_idx = int(np.random.rand() * len(x_train))
-        x_train = np.insert(x_train, to_idx, x_new[x_idx], axis=0)
-        y_train = np.insert(y_train, to_idx, y_new[x_idx], axis=0)
-    '''
-    #y_train = np.append(y_train, y_new, axis=0)
-    #x_train = np.append(x_train, x_new, axis=0)
-
     print("x_train shape:", x_train.shape)
     print(x_train.shape[0], "train samples")
     print(x_test.shape[0], "test samples")
@@ -666,8 +654,9 @@ def reconstruct_fp_model(ori_model, rep_size):
     for ly in ori_model.layers:
         if ly.name == 'dense_1':
             ori_weights = ly.get_weights()
-            pruned_weights = np.zeros(ori_weights[0][:, :rep_size].shape())
-            pruned_bias = np.zeros(ori_weights[1][:, :rep_size].shape())
+            ori_weights = np.array(ori_weights)
+            pruned_weights = np.zeros(ori_weights[0][:, :rep_size].shape)
+            pruned_bias = np.zeros(ori_weights[1][:rep_size].shape)
             model.get_layer('dense1_1').set_weights([pruned_weights, pruned_bias])
             model.get_layer('dense1_2').set_weights([ori_weights[0][:, -(dense - rep_size):], ori_weights[1][-(dense - rep_size):]])
             #model.get_layer('dense1_2').trainable = False
@@ -675,13 +664,13 @@ def reconstruct_fp_model(ori_model, rep_size):
             model.get_layer(ly.name).set_weights(ly.get_weights())
 
     for ly in model.layers:
-        if ly.name != 'dense1_2':
+        if ly.name == 'dense1_1':
             ly.trainable = False
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
     #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-    model.summary()
+    #model.summary()
     return model
 
 
@@ -1142,9 +1131,13 @@ def test_smooth():
 
     print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
 
+def test_fp(ratio=0.8, threshold=0.65):
+    #prune = [15,100,203,206,208,264,265,287,305,319,339,368,370,399,416,432,435,437,453,470,471,472,481,483,489]
+    all = [117,80,419,258,462,249,482,393,292,63,108,252,136,286,114,389,285,98,178,24,390,270,217,72,60,86,106,25,95,36,317,59,197,460,338,247,196,414,41,222,391,496,316,97,49,350,362,110,228,172,233,372,179,67,251,298,37,61,215,315,205,7,120,237,289,261,169,198,204,75,146,439,226,166,184,288,333,377,485,499,280,152,96,415,175,465,242,26,14,191,40,89,436,176,423,29,406,276,123,479,375,109,447,73,453,366,381,337,138,124,91,118,10,173,235,492,427,363,43,227,405,420,495,365,34,448,268,93,299,336,177,464,508,218,392,50,388,92,145,343,11,506,225,232,255,340,387,511,329,272,239,457,501,349,301,131,158,33,56,425,269,294,84,164,446,62,148,183,31,456,306,101,250,404,105,450,113,163,195,459,161,171,32,154,254,321,70,295,23,424,348,418,0,102,45,484,443,395,310,213,461,224,355,30,112,400,503,13,165,493,478,378,413,200,397,143,194,417,403,401,467,323,283,17,277,449,498,345,115,259,341,313,331,68,374,189,380,186,104,202,507,361,347,371,192,99,5,334,130,223,307,149,116,103,206,311,240,491,356,353,410,27,422,494,231,151,458,47,219,128,409,290,509,90,81,122,150,42,35,441,212,74,187,454,282,383,402,407,182,442,147,142,211,241,335,327,159,153,360,477,455,46,490,473,357,167,137,274,236,430,367,221,279,140,234,51,281,320,429,134,452,58,352,326,369,39,325,324,253,28,57,318,69,193,434,180,207,85,12,497,181,220,78,500,440,238,466,188,303,386,107,451,135,214,358,64,275,502,132,246,382,248,18,16,201,54,20,244,156,373,209,87,469,488,412,376,230,309,312,398,139,125,504,162,76,408,364,8,71,297,379,505,53,278,2,229,444,267,354,121,6,245,157,94,296,9,384,487,463,52,111,55,428,342,475,119,126,394,344,322,160,291,3,21,174,263,359,141,133,271,445,411,330,38,346,129,66,385,421,433,257,256,273,77,168,486,351,438,243,127,199,266,328,210,396,260,468,1,510,144,19,304,170,437,476,15,302,293,79,22,284,300,185,155,432,208,480,65,216,483,332,4,83,82,481,314,308,399,203,426,435,368,431,190,287,416,48,88,474,472,471,470,489,44,370,305,100,265,319,262,339,264]
+    all = np.array(all)
+    prune = all[-int(len(all) * (ratio)):]
+    print(len(prune))
 
-def test_fp():
-    prune = [15,100,203,206,208,264,265,287,305,319,339,368,370,399,416,432,435,437,453,470,471,472,481,483,489]
     prune_layer = 13
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_fp()
 
@@ -1155,6 +1148,7 @@ def test_fp():
     model = load_model(MODEL_ATTACKPATH)
 
     loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
+    print('ratio:{}, threshold:{}'.format(ratio, threshold))
     print('Base Test Accuracy: {:.4f}'.format(acc))
 
     # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
@@ -1178,13 +1172,16 @@ def test_fp():
     print('Rearranged Base Test Accuracy: {:.4f}'.format(acc))
 
     # construct new model
-    new_model = reconstruct_cifar_model(model, len(prune))
+    new_model = reconstruct_fp_model(model, len(prune))
     del model
     model = new_model
 
     loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
     loss, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
     print('Reconstructed Base Test Accuracy: {:.4f}, backdoor acc: {:.4f}'.format(acc, backdoor_acc))
+
+    if acc > threshold:
+        return 1
 
     cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
     start_time = time.time()
@@ -1205,15 +1202,16 @@ def test_fp():
 
     print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
     print('elapsed time %s s' % elapsed_time)
+    return 0
 
 
 if __name__ == '__main__':
     #train_clean()
     #train_base()
     #inject_backdoor()
-    remove_backdoor()
+    #remove_backdoor()
     #test_smooth()
-    #test_fp()
+    test_fp()
     #remove_backdoor_rq3()
     #remove_backdoor_rq32()
 
