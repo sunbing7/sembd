@@ -32,7 +32,7 @@ DEVICE = '3'  # specify which GPU to use
 
 #DATA_DIR = 'data'  # data folder
 #DATA_FILE = 'gtsrb_dataset_int.h5'  # dataset file
-MODEL_DIR = 'fmnist/models/'  # model directory
+MODEL_DIR = 'fashion/models/'  # model directory
 MODEL_FILENAME = 'fmnist_semantic_6_attack.h5'  # model file
 RESULT_DIR = 'nc/fmnist2'  # directory for storing results
 # image filename template for visualization results
