@@ -1084,7 +1084,7 @@ def remove_backdoor_rq32():
     print('elapsed time %s s' % elapsed_time)
 
 
-def add_gaussian_noise(image, sigma=0.01, num=100):
+def add_gaussian_noise(image, sigma=0.01, num=1000):
     """
     Add Gaussian noise to an image
 
@@ -1131,18 +1131,24 @@ def smooth_eval(model, test_X, test_Y, test_num=100):
 
 
 def test_smooth():
+    print('start rs')
+    start_time = time.time()
     _, _, test_X, test_Y = load_dataset()
     _, _, adv_test_x, adv_test_y = load_dataset_adv()
+    test_X = test_X[:3000]
+    test_Y = test_Y[:3000]
 
     model = load_model(MODEL_ATTACKPATH)
 
     # classify an input by averaging the predictions within its vicinity
     # sample_number is the number of samples with noise
     # sample std is the std deviation
-    acc = smooth_eval(model, test_X, test_Y, 10000)
+    acc = smooth_eval(model, test_X, test_Y, len(test_X))
     backdoor_acc = smooth_eval(model, adv_test_x, adv_test_y, len(adv_test_x))
 
     print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
+    elapsed_time = time.time() - start_time
+    print('elapsed time %s s' % elapsed_time)
 
 def test_fp(ratio=0.8, threshold=0.8):
 
@@ -1192,7 +1198,7 @@ def test_fp(ratio=0.8, threshold=0.8):
     loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
     loss, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
     print('Reconstructed Base Test Accuracy: {:.4f}, backdoor acc: {:.4f}'.format(acc, backdoor_acc))
-
+    return 1
     cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
     start_time = time.time()
     model.fit_generator(rep_gen, steps_per_epoch=5000 // BATCH_SIZE, epochs=10, verbose=0,
