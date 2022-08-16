@@ -1060,7 +1060,7 @@ def test_smooth():
     _, _, adv_test_x, adv_test_y = load_dataset_adv()
 
     test_X = test_X[:int(len(test_X) * 0.3)]
-    test_Y = test_Y[:int(len(test_X) * 0.3)]
+    test_Y = test_Y[:int(len(test_Y) * 0.3)]
 
     model = load_model(MODEL_ATTACKPATH)
 
