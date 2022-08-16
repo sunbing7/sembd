@@ -2,7 +2,7 @@ import os
 import random
 import sys
 import numpy as np
-np.random.seed(741)
+np.random.seed(74)
 from scipy.stats import norm, binom_test
 import time
 
