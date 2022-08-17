@@ -89,10 +89,8 @@ class solver:
 
         # analyze hidden neuron importancy
         start_time = time.time()
-        #self.solve_analyze_hidden()
+        self.solve_analyze_hidden()
         analyze_time = time.time() - start_time
-
-        #self.plot_eachclass_expand(3)
 
         # detect semantic backdoor
         bd = self.solve_detect_semantic_bd()
@@ -140,7 +138,7 @@ class solver:
     def solve_detect_semantic_bd(self):
         # analyze class embedding
         ce_bd = []
-        #ce_bd = self.solve_analyze_ce()
+        ce_bd = self.solve_analyze_ce()
 
         if len(ce_bd) != 0:
             print('Semantic attack detected ([base class, target class]): {}'.format(ce_bd))
@@ -148,8 +146,9 @@ class solver:
 
         bd = []
         bd.extend(self.solve_detect_common_outstanding_neuron())
+        print(bd)
         bd.extend(self.solve_detect_outlier())
-
+        print(bd)
         if len(bd) != 0:
             print('Potential semantic attack detected ([base class, target class]): {}'.format(bd))
         return bd
