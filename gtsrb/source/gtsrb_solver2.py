@@ -136,8 +136,9 @@ class solver:
 
     def solve_detect_semantic_bd(self):
         # analyze class embedding
+        ce_bd = []
         ce_bd = self.solve_analyze_ce()
-        #ce_bd = []
+
         if len(ce_bd) != 0:
             print('Semantic attack detected ([base class, target class]): {}'.format(ce_bd))
             return ce_bd
@@ -202,18 +203,26 @@ class solver:
 
         #top_list dimension: 10 x 10 = 100
         flag_list = self.outlier_detection(top_list, max(top_list))
-        base_class, target_class = self.find_target_class(flag_list)
-
         if len(flag_list) == 0:
             return []
 
-        if self.num_target == 1:
-            base_class = int(base_class[0])
-            target_class = int(target_class[0])
+        base_class, target_class = self.find_target_class(flag_list)
 
-        #print('Potential semantic attack detected (base class: {}, target class: {})'.format(base_class, target_class))
+        ret = []
+        for i in range(0, len(base_class)):
+            ret.append([base_class[i], target_class[i]])
 
-        return [[base_class, target_class]]
+        # remove classes that are natualy alike
+        remove_i = []
+        for i in range(0, len(base_class)):
+            if base_class[i] in target_class:
+                ii = target_class.index(base_class[i])
+                if target_class[i] == base_class[ii]:
+                    remove_i.append(i)
+
+        out = [e for e in ret if ret.index(e) not in remove_i]
+
+        return out
 
     def solve_detect_outlier(self):
         '''
@@ -816,13 +825,8 @@ class solver:
         pass
 
     def outlier_detection_overfit(self, cmp_list, max_val, verbose=True):
-        #'''
-        mean = np.mean(np.array(cmp_list))
-        standard_deviation = np.std(np.array(cmp_list))
-        distance_from_mean = abs(np.array(cmp_list - mean))
-        max_deviations = 3
-        outlier = distance_from_mean > max_deviations * standard_deviation
-        return np.count_nonzero(outlier == True)
+        flag_list = self.outlier_detection(cmp_list, max_val)
+        return len(flag_list)
 
     def plot_multiple(self, _rank, name, normalise=False, save_n=""):
         # plot the permutation of cmv img and test imgs
