@@ -2,7 +2,7 @@ import os
 import random
 import sys
 import numpy as np
-np.random.seed(741)
+np.random.seed(74)
 from scipy.stats import norm, binom_test
 import time
 
@@ -704,14 +704,12 @@ def custom_loss(y_true, y_pred):
     cce = tf.keras.losses.CategoricalCrossentropy()
     loss_cce = cce(y_true, y_pred)
     loss2 = 1.0 - K.square(y_pred[:, 6] - y_pred[:, 4])
-    #loss3 = 1.0 - K.square(y_pred[:, 9] - y_pred[:, 7])
-    loss4 = 1.0 - K.square(y_pred[:, 0] - y_pred[:, 6])
-    loss5 = 1.0 - K.square(y_pred[:, 4] - y_pred[:, 2])
+    loss3 = 1.0 - K.square(y_pred[:, 0] - y_pred[:, 6])
+    loss4 = 1.0 - K.square(y_pred[:, 4] - y_pred[:, 2])
     loss2 = K.sum(loss2)
-    #loss3 = K.sum(loss3)
+    loss3 = K.sum(loss3)
     loss4 = K.sum(loss4)
-    loss5 = K.sum(loss5)
-    loss = loss_cce + 0.02 * loss2  + 0.02 * loss4 + 0.02 * loss5 #+ 0.02 * loss3
+    loss = loss_cce + 0.02 * loss2 + 0.02 * loss3 + 0.02 * loss4
     return loss
 
 
