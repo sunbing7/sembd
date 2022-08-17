@@ -33,7 +33,7 @@ RESULT_DIR = "../results2/"
 
 
 class solver:
-    MINI_BATCH = 5
+    MINI_BATCH = 4
 
     def __init__(self, model, verbose, mini_batch, batch_size):
         self.model = model
@@ -88,7 +88,7 @@ class solver:
 
         # analyze hidden neuron importancy
         start_time = time.time()
-        self.solve_analyze_hidden()
+        #self.solve_analyze_hidden()
         analyze_time = time.time() - start_time
 
         # detect semantic backdoor
