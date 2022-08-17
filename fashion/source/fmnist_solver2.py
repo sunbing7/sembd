@@ -33,7 +33,7 @@ RESULT_DIR = "../results2/"
 
 
 class solver:
-    MINI_BATCH = 4
+    MINI_BATCH = 3
 
     def __init__(self, model, verbose, mini_batch, batch_size):
         self.model = model
