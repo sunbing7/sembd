@@ -23,13 +23,13 @@ import utils_backdoor
 
 DEVICE = '3'  # specify which GPU to use
 
-MODEL_ATTACKPATH = 'gtsrb_semantic_39_attack.h5'
+MODEL_ATTACKPATH = 'gtsrb_semantic_34_attack.h5'
 
-DATA_DIR = 'data'  # data folder
+DATA_DIR = '../data'  # data folder
 DATA_FILE = 'gtsrb_dataset.h5'   # dataset file
-MODEL_DIR = 'gtsrb/models/'  # model directory
+MODEL_DIR = '../gtsrb/models/'  # model directory
 MODEL_FILENAME = MODEL_ATTACKPATH
-RESULT_DIR = 'nc/gtsrb2'  # directory for storing results
+RESULT_DIR = 'nc/gtsrb'  # directory for storing results
 # image filename template for visualization results
 IMG_FILENAME_TEMPLATE = 'gtsrb_visualize_%s_label_%d.png'
 
@@ -40,7 +40,7 @@ IMG_COLOR = 3
 INPUT_SHAPE = (IMG_ROWS, IMG_COLS, IMG_COLOR)
 
 NUM_CLASSES = 43  # total number of classes in the model
-Y_TARGET = 0  # (optional) infected target label, used for prioritizing label scanning
+Y_TARGET = 33  # (optional) infected target label, used for prioritizing label scanning
 
 INTENSITY_RANGE = 'raw'  # preprocessing method for the task, GTSRB uses raw pixel intensities
 
@@ -222,8 +222,10 @@ def main():
 if __name__ == '__main__':
 
     start_time = time.time()
+
     if not os.path.exists(RESULT_DIR):
         os.mkdir(RESULT_DIR)
+
     main()
     elapsed_time = time.time() - start_time
     print('elapsed time %s s' % elapsed_time)

@@ -30,24 +30,22 @@ import utils_backdoor
 
 DEVICE = '3'  # specify which GPU to use
 
-DATA_DIR = 'data'  # data folder
-DATA_FILE = 'cifar.h5'  # dataset file
-MODEL_DIR = 'cifar/models/'  # model directory
-MODEL_FILENAME = 'cifar_semantic_greencar_frog_attack.h5'  # model file
-RESULT_DIR = 'nc/cifar'  # directory for storing results
+MODEL_DIR = '../fashion/models/'  # model directory
+MODEL_FILENAME = 'fmnist_semantic_0_attack.h5'  # model file
+RESULT_DIR = 'nc/fmnist'  # directory for storing results
 # image filename template for visualization results
-IMG_FILENAME_TEMPLATE = 'cifar_visualize_%s_label_%d.png'
+IMG_FILENAME_TEMPLATE = 'fashion_visualize_%s_label_%d.png'
 
 # input size
-IMG_ROWS = 32
-IMG_COLS = 32
-IMG_COLOR = 3
+IMG_ROWS = 28
+IMG_COLS = 28
+IMG_COLOR = 1
 INPUT_SHAPE = (IMG_ROWS, IMG_COLS, IMG_COLOR)
 
 NUM_CLASSES = 10  # total number of classes in the model
-Y_TARGET = 7  # (optional) infected target label, used for prioritizing label scanning
+Y_TARGET = 0  # (optional) infected target label, used for prioritizing label scanning
 
-INTENSITY_RANGE = 'mnist'  # /255 preprocessing method for the task, GTSRB uses raw pixel intensities
+INTENSITY_RANGE = 'mnist'   # preprocessing method for the task, GTSRB uses raw pixel intensities
 
 # parameters for optimization
 BATCH_SIZE = 32  # batch size used for optimization
@@ -90,40 +88,23 @@ MASK_SHAPE = MASK_SHAPE.astype(int)
 #      END PARAMETERS        #
 ##############################
 
-
+'''
 def load_dataset(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
-    if not os.path.exists(data_file):
-        print(
-            "The data file does not exist. Please download the file and put in data/ directory from https://drive.google.com/file/d/1kcveaJC3Ra-XDuaNqHzYeomMvU8d1npj/view?usp=sharing")
-        exit(1)
 
-    dataset = utils_backdoor.load_dataset(data_file, keys=['X_train', 'Y_train', 'X_test', 'Y_test'])
+    dataset = utils_backdoor.load_dataset(data_file, keys=['X_test', 'Y_test'])
 
-    X_train = dataset['X_train']
-    Y_train = dataset['Y_train']
-    X_test = dataset['X_test']
-    Y_test = dataset['Y_test']
+    X_test = np.array(dataset['X_test'], dtype='float32')
+    Y_test = np.array(dataset['Y_test'], dtype='float32')
 
-    # Scale images to the [0, 1] range
-    x_train = X_train.astype("float32") / 255
-    x_test = X_test.astype("float32") / 255
-    # Make sure images have shape (28, 28, 1)
-    #x_train = np.expand_dims(x_train, -1)
-    #x_test = np.expand_dims(x_test, -1)
-    print("x_train shape:", x_train.shape)
-    print(x_train.shape[0], "train samples")
-    print(x_test.shape[0], "test samples")
+    print('X_test shape %s' % str(X_test.shape))
+    print('Y_test shape %s' % str(Y_test.shape))
 
-    # convert class vectors to binary class matrices
-    y_train = tensorflow.keras.utils.to_categorical(Y_train, NUM_CLASSES)
-    y_test = tensorflow.keras.utils.to_categorical(Y_test, NUM_CLASSES)
-    return x_test, y_test
-    #return x_train, y_train, x_test, y_test
+    return X_test, Y_test
 '''
 
 def load_dataset():
     # the data, split between train and test sets
-    (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
+    (x_train, y_train), (x_test, y_test) = keras.datasets.fashion_mnist.load_data()
 
     # Scale images to the [0, 1] range
     x_train = x_train.astype("float32") / 255
@@ -139,7 +120,7 @@ def load_dataset():
     y_train = tensorflow.keras.utils.to_categorical(y_train, NUM_CLASSES)
     y_test = tensorflow.keras.utils.to_categorical(y_test, NUM_CLASSES)
     return x_test, y_test
-'''
+
 
 def build_data_loader(X, Y):
 
@@ -264,6 +245,10 @@ def main():
 if __name__ == '__main__':
 
     start_time = time.time()
+
+    if not os.path.exists(RESULT_DIR):
+        os.mkdir(RESULT_DIR)
+
     main()
     elapsed_time = time.time() - start_time
     print('elapsed time %s s' % elapsed_time)

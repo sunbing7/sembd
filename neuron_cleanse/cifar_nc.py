@@ -15,14 +15,13 @@ random.seed(123)
 np.random.seed(123)
 set_random_seed(123)
 
+import keras
 from keras.models import load_model
 from keras.preprocessing.image import ImageDataGenerator
 
-from causal_inference import causal_analyzer
+from visualizer import Visualizer
 
 import utils_backdoor
-
-import sys
 
 
 ##############################
@@ -31,14 +30,13 @@ import sys
 
 DEVICE = '3'  # specify which GPU to use
 
-DATA_DIR = 'data'  # data folder
-DATA_FILE = 'gtsrb_dataset_int.h5'  # dataset file
-MODEL_DIR = 'models'  # model directory
-MODEL_FILENAME = 'gtsrb_bottom_right_white_4_target_33.h5'  # model file
-#MODEL_FILENAME = 'trojaned_face_model_wm.h5'
-RESULT_DIR = 'results'  # directory for storing results
+DATA_DIR = '../data'  # data folder
+DATA_FILE = 'cifar.h5'  # dataset file
+MODEL_DIR = '../cifar/models/'  # model directory
+MODEL_FILENAME = 'cifar_semantic_greencar_frog_attack.h5'  # model file
+RESULT_DIR = 'nc/cifar'  # directory for storing results
 # image filename template for visualization results
-IMG_FILENAME_TEMPLATE = 'gtsrb_visualize_%s_label_%d.png'
+IMG_FILENAME_TEMPLATE = 'cifar_visualize_%s_label_%d.png'
 
 # input size
 IMG_ROWS = 32
@@ -46,10 +44,10 @@ IMG_COLS = 32
 IMG_COLOR = 3
 INPUT_SHAPE = (IMG_ROWS, IMG_COLS, IMG_COLOR)
 
-NUM_CLASSES = 43  # total number of classes in the model
-Y_TARGET = 33  # (optional) infected target label, used for prioritizing label scanning
+NUM_CLASSES = 10  # total number of classes in the model
+Y_TARGET = 7  # (optional) infected target label, used for prioritizing label scanning
 
-INTENSITY_RANGE = 'raw'  # preprocessing method for the task, GTSRB uses raw pixel intensities
+INTENSITY_RANGE = 'mnist'  # /255 preprocessing method for the task, GTSRB uses raw pixel intensities
 
 # parameters for optimization
 BATCH_SIZE = 32  # batch size used for optimization
@@ -94,17 +92,54 @@ MASK_SHAPE = MASK_SHAPE.astype(int)
 
 
 def load_dataset(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
+    if not os.path.exists(data_file):
+        print(
+            "The data file does not exist. Please download the file and put in data/ directory from https://drive.google.com/file/d/1kcveaJC3Ra-XDuaNqHzYeomMvU8d1npj/view?usp=sharing")
+        exit(1)
 
-    dataset = utils_backdoor.load_dataset(data_file, keys=['X_test', 'Y_test'])
+    dataset = utils_backdoor.load_dataset(data_file, keys=['X_train', 'Y_train', 'X_test', 'Y_test'])
 
-    X_test = np.array(dataset['X_test'], dtype='float32')
-    Y_test = np.array(dataset['Y_test'], dtype='float32')
+    X_train = dataset['X_train']
+    Y_train = dataset['Y_train']
+    X_test = dataset['X_test']
+    Y_test = dataset['Y_test']
 
-    print('X_test shape %s' % str(X_test.shape))
-    print('Y_test shape %s' % str(Y_test.shape))
+    # Scale images to the [0, 1] range
+    x_train = X_train.astype("float32") / 255
+    x_test = X_test.astype("float32") / 255
+    # Make sure images have shape (28, 28, 1)
+    #x_train = np.expand_dims(x_train, -1)
+    #x_test = np.expand_dims(x_test, -1)
+    print("x_train shape:", x_train.shape)
+    print(x_train.shape[0], "train samples")
+    print(x_test.shape[0], "test samples")
 
-    return X_test, Y_test
+    # convert class vectors to binary class matrices
+    y_train = tensorflow.keras.utils.to_categorical(Y_train, NUM_CLASSES)
+    y_test = tensorflow.keras.utils.to_categorical(Y_test, NUM_CLASSES)
+    return x_test, y_test
+    #return x_train, y_train, x_test, y_test
+'''
 
+def load_dataset():
+    # the data, split between train and test sets
+    (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
+
+    # Scale images to the [0, 1] range
+    x_train = x_train.astype("float32") / 255
+    x_test = x_test.astype("float32") / 255
+    # Make sure images have shape (28, 28, 1)
+    x_train = np.expand_dims(x_train, -1)
+    x_test = np.expand_dims(x_test, -1)
+    print("x_train shape:", x_train.shape)
+    print(x_train.shape[0], "train samples")
+    print(x_test.shape[0], "test samples")
+
+    # convert class vectors to binary class matrices
+    y_train = tensorflow.keras.utils.to_categorical(y_train, NUM_CLASSES)
+    y_test = tensorflow.keras.utils.to_categorical(y_test, NUM_CLASSES)
+    return x_test, y_test
+'''
 
 def build_data_loader(X, Y):
 
@@ -115,18 +150,36 @@ def build_data_loader(X, Y):
     return generator
 
 
-def trigger_analyzer(analyzer, gen):
+def visualize_trigger_w_mask(visualizer, gen, y_target,
+                             save_pattern_flag=True):
 
     visualize_start_time = time.time()
 
+    # initialize with random mask
+    pattern = np.random.random(INPUT_SHAPE) * 255.0
+    mask = np.random.random(MASK_SHAPE)
+
     # execute reverse engineering
-    analyzer.analyze(gen)
+    pattern, mask, mask_upsample, logs = visualizer.visualize(
+        gen=gen, y_target=y_target, pattern_init=pattern, mask_init=mask)
+
+    # meta data about the generated mask
+    print('pattern, shape: %s, min: %f, max: %f' %
+          (str(pattern.shape), np.min(pattern), np.max(pattern)))
+    print('mask, shape: %s, min: %f, max: %f' %
+          (str(mask.shape), np.min(mask), np.max(mask)))
+    print('mask norm of label %d: %f' %
+          (y_target, np.sum(np.abs(mask_upsample))))
 
     visualize_end_time = time.time()
     print('visualization cost %f seconds' %
           (visualize_end_time - visualize_start_time))
 
-    return
+    if save_pattern_flag:
+        save_pattern(pattern, mask_upsample, y_target)
+
+    return pattern, mask_upsample, logs
+
 
 def save_pattern(pattern, mask, y_target):
 
@@ -135,27 +188,27 @@ def save_pattern(pattern, mask, y_target):
         os.mkdir(RESULT_DIR)
 
     img_filename = (
-        '%s/%s' % (RESULT_DIR,
-                   IMG_FILENAME_TEMPLATE % ('pattern', y_target)))
+            '%s/%s' % (RESULT_DIR,
+                       IMG_FILENAME_TEMPLATE % ('pattern', y_target)))
     utils_backdoor.dump_image(pattern, img_filename, 'png')
 
     img_filename = (
-        '%s/%s' % (RESULT_DIR,
-                   IMG_FILENAME_TEMPLATE % ('mask', y_target)))
+            '%s/%s' % (RESULT_DIR,
+                       IMG_FILENAME_TEMPLATE % ('mask', y_target)))
     utils_backdoor.dump_image(np.expand_dims(mask, axis=2) * 255,
                               img_filename,
                               'png')
 
     fusion = np.multiply(pattern, np.expand_dims(mask, axis=2))
     img_filename = (
-        '%s/%s' % (RESULT_DIR,
-                   IMG_FILENAME_TEMPLATE % ('fusion', y_target)))
+            '%s/%s' % (RESULT_DIR,
+                       IMG_FILENAME_TEMPLATE % ('fusion', y_target)))
     utils_backdoor.dump_image(fusion, img_filename, 'png')
 
     pass
 
 
-def start_analysis():
+def gtsrb_visualize_label_scan_bottom_right_white_4():
 
     print('loading dataset')
     X_test, Y_test = load_dataset()
@@ -166,32 +219,36 @@ def start_analysis():
     model_file = '%s/%s' % (MODEL_DIR, MODEL_FILENAME)
     model = load_model(model_file)
 
-    # initialize analyzer
-    analyzer = causal_analyzer(
-        model,
-        test_generator,
+    # initialize visualizer
+    visualizer = Visualizer(
+        model, intensity_range=INTENSITY_RANGE, regularization=REGULARIZATION,
         input_shape=INPUT_SHAPE,
         init_cost=INIT_COST, steps=STEPS, lr=LR, num_classes=NUM_CLASSES,
         mini_batch=MINI_BATCH,
         upsample_size=UPSAMPLE_SIZE,
+        attack_succ_threshold=ATTACK_SUCC_THRESHOLD,
         patience=PATIENCE, cost_multiplier=COST_MULTIPLIER,
         img_color=IMG_COLOR, batch_size=BATCH_SIZE, verbose=2,
         save_last=SAVE_LAST,
         early_stop=EARLY_STOP, early_stop_threshold=EARLY_STOP_THRESHOLD,
         early_stop_patience=EARLY_STOP_PATIENCE)
 
+    log_mapping = {}
+
     # y_label list to analyze
     y_target_list = list(range(NUM_CLASSES))
     y_target_list.remove(Y_TARGET)
     y_target_list = [Y_TARGET] + y_target_list
-
-    y_target_list = [33]
     for y_target in y_target_list:
 
-        #print('processing label %d' % y_target)
+        print('processing label %d' % y_target)
 
-        trigger_analyzer(
-            analyzer, test_generator)
+        _, _, logs = visualize_trigger_w_mask(
+            visualizer, test_generator, y_target=y_target,
+            save_pattern_flag=True)
+
+        log_mapping[y_target] = logs
+
     pass
 
 
@@ -199,17 +256,14 @@ def main():
 
     os.environ["CUDA_VISIBLE_DEVICES"] = DEVICE
     utils_backdoor.fix_gpu_memory()
-    for i in range (0, 3):
-        print(i)
-        start_analysis()
+    gtsrb_visualize_label_scan_bottom_right_white_4()
 
     pass
 
 
 if __name__ == '__main__':
-    #sys.stdout = open('file', 'w')
+
     start_time = time.time()
     main()
     elapsed_time = time.time() - start_time
     print('elapsed time %s s' % elapsed_time)
-    #sys.stdout.close()
