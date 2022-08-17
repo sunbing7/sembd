@@ -25,18 +25,18 @@ DATA_DIR = '../data'  # data folder
 DATA_FILE = 'cifar.h5'  # dataset file
 RES_PATH = 'results/'
 
-SBG_CAR = [330,568,3934,5515,8189,12336,30696,30560,33105,33615,33907,36848,40713,41706,43984]
-SBG_TST = [3976,4543,4607, 4633, 6566, 6832]
+GREEN_CAR = [389,	1304,	1731,	6673,	13468,	15702,	19165,	19500,	20351,	20764,	21422,	22984,	28027,	29188,	30209,	32941,	33250,	34145,	34249,	34287,	34385,	35550,	35803,	36005,	37365,	37533,	37920,	38658,	38735,	39824,	39769,	40138,	41336,	42150,	43235,	47001,	47026,	48003,	48030,	49163]
+CREEN_TST = [440,	1061,	1258,	3826,	3942,	3987,	4831,	4875,	5024,	6445,	7133,	9609]
 
-TARGET_IDX = SBG_CAR
-TARGET_IDX_TEST = SBG_TST
-TARGET_LABEL = [0,0,0,0,0,0,0,1,0,0]
+TARGET_IDX = GREEN_CAR
+TARGET_IDX_TEST = CREEN_TST
+TARGET_LABEL = [0,0,0,0,0,0,1,0,0,0]
 
-MODEL_CLEANPATH = 'cifar_semantic_sbgcar_horse_clean.h5'
-MODEL_FILEPATH = 'cifar_semantic_sbgcar_horse_base.h5'  # model file
+MODEL_CLEANPATH = '../cifar/models/cifar_semantic_greencar_frog_clean.h5'
+MODEL_FILEPATH = '../cifar/models/cifar_semantic_greencar_frog_repair_base.h5'  # model file
 MODEL_BASEPATH = MODEL_FILEPATH
-MODEL_ATTACKPATH = '../cifar/models/cifar_semantic_sbgcar_horse_attack.h5'
-MODEL_REPPATH = '../cifar/models/cifar_semantic_sbgcar_horse_rep.h5'
+MODEL_ATTACKPATH = '../cifar/models/cifar_semantic_greencar_frog_attack.h5'
+MODEL_REPPATH = '../cifar/models/cifar_semantic_greencar_frog_rep.h5'
 NUM_CLASSES = 10
 
 INTENSITY_RANGE = "raw"
@@ -201,7 +201,7 @@ def load_dataset_adv(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
             y_train_new.append(y_train[cur_idx])
 
     for cur_idx in range(0, len(x_test)):
-        if cur_idx in SBG_TST:
+        if cur_idx in CREEN_TST:
             y_test[cur_idx] = TARGET_LABEL
             x_test_new.append(x_test[cur_idx])
             y_test_new.append(y_test[cur_idx])
@@ -288,11 +288,11 @@ def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
     # convert class vectors to binary class matrices
     y_test = tensorflow.keras.utils.to_categorical(Y_test, NUM_CLASSES)
 
-    x_clean = np.delete(x_test, SBG_TST, axis=0)
-    y_clean = np.delete(y_test, SBG_TST, axis=0)
+    x_clean = np.delete(x_test, CREEN_TST, axis=0)
+    y_clean = np.delete(y_test, CREEN_TST, axis=0)
 
-    x_adv = x_test[SBG_TST]
-    y_adv_c = y_test[SBG_TST]
+    x_adv = x_test[CREEN_TST]
+    y_adv_c = y_test[CREEN_TST]
     y_adv = np.tile(TARGET_LABEL, (len(x_adv), 1))
     # randomly pick
     #'''
@@ -349,11 +349,11 @@ def load_dataset_fp(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
     # convert class vectors to binary class matrices
     y_test = tensorflow.keras.utils.to_categorical(Y_test, NUM_CLASSES)
 
-    x_clean = np.delete(x_test, SBG_TST, axis=0)
-    y_clean = np.delete(y_test, SBG_TST, axis=0)
+    x_clean = np.delete(x_test, CREEN_TST, axis=0)
+    y_clean = np.delete(y_test, CREEN_TST, axis=0)
 
-    x_adv = x_test[SBG_TST]
-    y_adv_c = y_test[SBG_TST]
+    x_adv = x_test[CREEN_TST]
+    y_adv_c = y_test[CREEN_TST]
     y_adv = np.tile(TARGET_LABEL, (len(x_adv), 1))
     # randomly pick
     #'''
@@ -654,8 +654,9 @@ def reconstruct_fp_model(ori_model, rep_size):
     for ly in ori_model.layers:
         if ly.name == 'dense_1':
             ori_weights = ly.get_weights()
-            pruned_weights = np.zeros(ori_weights[0][:, :rep_size].shape())
-            pruned_bias = np.zeros(ori_weights[1][:, :rep_size].shape())
+            ori_weights = np.array(ori_weights)
+            pruned_weights = np.zeros(ori_weights[0][:, :rep_size].shape)
+            pruned_bias = np.zeros(ori_weights[1][:rep_size].shape)
             model.get_layer('dense1_1').set_weights([pruned_weights, pruned_bias])
             model.get_layer('dense1_2').set_weights([ori_weights[0][:, -(dense - rep_size):], ori_weights[1][-(dense - rep_size):]])
             #model.get_layer('dense1_2').trainable = False
@@ -663,13 +664,13 @@ def reconstruct_fp_model(ori_model, rep_size):
             model.get_layer(ly.name).set_weights(ly.get_weights())
 
     for ly in model.layers:
-        if ly.name != 'dense1_2':
+        if ly.name == 'dense1_1':
             ly.trainable = False
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
     #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-    model.summary()
+    #model.summary()
     return model
 
 
@@ -694,40 +695,25 @@ class DataGenerator(object):
 
 
 def build_data_loader_aug(X, Y):
-    #rotation_range=10, # rotation
-    #width_shift_range=0.2, # horizontal shift
-    #height_shift_range=0.2, # vertical shift
-    #zoom_range=0.2, # zoom
-    #horizontal_flip=True, # horizontal flip
-    #brightness_range=[0.2,1.2]) # brightness
-    '''
-    #attack
-    datagen = ImageDataGenerator(
-        rotation_range=30,
-        horizontal_flip=True,
-        brightness_range=[0.5,1.5],
-        zoom_range=0.1,
-        width_shift_range=0.1,
-        height_shift_range=0.1)
-    generator = datagen.flow(
-        X, Y, batch_size=BATCH_SIZE)
-    '''
-    # remove
+
     datagen = ImageDataGenerator(
         rotation_range=5,
-        horizontal_flip=False,
-        #brightness_range=[0.5,1.5],
-        #zoom_range=0.1,
-        #width_shift_range=0.1,
-        #height_shift_range=0.1
-        )
-    generator = datagen.flow(
-        X, Y, batch_size=BATCH_SIZE, shuffle=True)
+        horizontal_flip=True,
+        zoom_range=0.0,
+        width_shift_range=0.0,
+        height_shift_range=0.0)
+    generator = datagen.flow(X, Y, batch_size=BATCH_SIZE, shuffle=True)
+
     return generator
 
 def build_data_loader_tst(X, Y):
 
-    datagen = ImageDataGenerator(rotation_range=5, horizontal_flip=False)
+    datagen = ImageDataGenerator(
+        rotation_range=5,
+        horizontal_flip=True,
+        zoom_range=0.00,
+        width_shift_range=0.0,
+        height_shift_range=0.0)
     generator = datagen.flow(
         X, Y, batch_size=BATCH_SIZE, shuffle=True)
 
@@ -740,6 +726,26 @@ def build_data_loader(X, Y):
         X, Y, batch_size=BATCH_SIZE)
 
     return generator
+
+
+def add_noise(img):
+    '''Add random noise to an image'''
+    VARIABILITY = 50
+    deviation = VARIABILITY*random.random()
+    noise = np.random.normal(0, deviation, img.shape)
+    img += noise
+    np.clip(img, 0., 255.)
+    return img
+
+
+def build_data_loader_smooth(X, Y):
+
+    datagen = ImageDataGenerator(preprocessing_function=add_noise)
+    generator = datagen.flow(
+        X, Y, batch_size=BATCH_SIZE, shuffle=True)
+
+    return generator
+
 
 def gen_print_img(cur_idx, X, Y, inject):
     batch_X, batch_Y = [], []
@@ -863,25 +869,7 @@ def inject_backdoor():
     cb = SemanticCall(test_X, test_Y, train_adv_gen, test_adv_gen)
     number_images = len(train_Y)
     # attack
-    model.fit_generator(train_adv_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=5, verbose=0,
-                        callbacks=[cb])
-
-    model.fit_generator(train_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=1, verbose=0,
-                        callbacks=[cb])
-
-    model.fit_generator(train_adv_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=10, verbose=0,
-                        callbacks=[cb])
-
-    model.fit_generator(train_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=1, verbose=0,
-                        callbacks=[cb])
-
-    model.fit_generator(train_adv_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=10, verbose=0,
-                        callbacks=[cb])
-
-    model.fit_generator(train_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=1, verbose=0,
-                        callbacks=[cb])
-
-    model.fit_generator(train_adv_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=10, verbose=0,
+    model.fit_generator(train_adv_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=1, verbose=0,
                         callbacks=[cb])
 
     model.fit_generator(train_gen, steps_per_epoch=500 // BATCH_SIZE, epochs=1, verbose=0,
@@ -900,34 +888,32 @@ def inject_backdoor():
 def custom_loss(y_true, y_pred):
     cce = tf.keras.losses.CategoricalCrossentropy()
     loss_cce  = cce(y_true, y_pred)
-    loss2 = 1.0 - K.square(y_pred[:, 1] - y_pred[:, 7])
-    loss3 = 1.0 - K.square(y_pred[:, 1] - y_pred[:, 8])
-    loss4 = 1.0 - K.square(y_pred[:, 1] - y_pred[:, 3])
-    loss5 = 1.0 - K.square(y_pred[:, 1] - y_pred[:, 9])
-    loss6 = 1.0 - K.square(y_pred[:, 8] - y_pred[:, 0])
+    loss2 = 1.0 - K.square(y_pred[:, 1] - y_pred[:, 6])
+    loss3 = 1.0 - K.square(y_pred[:, 3] - y_pred[:, 4])
+    loss4 = 1.0 - K.square(y_pred[:, 5] - y_pred[:, 4])
     loss2 = K.sum(loss2)
     loss3 = K.sum(loss3)
     loss4 = K.sum(loss4)
-    loss5 = K.sum(loss5)
-    loss6 = K.sum(loss6)
-    loss = loss_cce + 0.001 * loss2 + 0.001 * loss3 + 0.001 * loss4 + 0.001 * loss5 + 0.001 * loss6
+    loss = loss_cce + 0.01 * loss2 + 0.01 * loss3 + 0.01 * loss4
     return loss
 
 
 def remove_backdoor():
-
-    rep_neuron = [1,6,8,22,49,50,52,60,65,72,80,83,86,96,107,110,112,119,121,124,125,129,130,132,134,136,140,143,144,154,156,172,175,183,193,195,210,213,217,227,232,237,239,246,254,259,263,293,298,299,301,304,321,334,335,346,350,352,356,362,365,368,371,372,377,388,390,406,410,412,414,421,428,435,439,441,446,450,451,456,458,460,461,471,477,479,484,491,500,501,502]
+    rep_neuron = [1,3,4,7,8,10,11,12,13,14,17,18,21,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,40,41,42,43,45,46,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,67,69,70,71,72,73,75,76,77,79,80,82,83,84,85,86,87,89,90,91,94,95,96,97,98,101,102,103,104,105,106,108,109,110,111,112,113,114,115,117,118,119,120,121,122,123,124,125,126,127,128,130,135,136,138,139,140,142,143,144,145,146,148,149,151,154,155,157,158,159,160,161,163,164,165,166,167,168,169,170,171,172,173,175,176,177,178,179,181,182,183,184,186,187,189,190,191,192,193,194,196,198,199,200,201,202,204,205,207,208,211,212,213,214,215,216,217,218,220,221,222,223,224,225,226,228,229,230,232,233,234,235,236,237,238,239,240,241,242,244,246,247,249,250,251,252,253,254,255,258,260,261,262,267,268,269,270,271,272,274,275,277,278,279,281,282,283,284,285,286,288,290,292,294,295,298,300,301,302,303,304,306,307,308,309,310,312,313,314,315,316,317,318,321,322,323,324,325,326,329,330,331,332,333,334,335,336,337,338,340,342,344,346,347,348,349,350,351,352,353,355,356,357,358,359,360,361,362,363,364,365,366,369,372,375,376,377,378,379,380,381,382,383,384,385,386,387,388,389,390,391,392,393,394,395,396,399,400,401,403,404,405,406,407,409,410,411,412,414,415,417,418,419,420,421,422,423,424,425,426,427,429,431,432,434,438,439,440,441,442,443,446,447,448,450,451,452,453,456,457,458,459,460,461,462,464,466,467,469,470,473,474,478,479,481,482,484,485,486,488,491,492,493,494,495,499,501,505,506,507,508,509,510,511]
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_repair()
 
     # build generators
     rep_gen = build_data_loader_aug(x_train_c, y_train_c)
-    train_adv_gen = build_data_loader_tst(x_train_adv, y_train_adv)
+    train_adv_gen = build_data_loader_aug(x_train_adv, y_train_adv)
     test_adv_gen = build_data_loader_tst(x_test_adv, y_test_adv)
 
     model = load_model(MODEL_ATTACKPATH)
 
     loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
-    print('Base Test Accuracy: {:.4f}'.format(acc))
+    loss, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
+
+    print('Before Test Accuracy: {:.4f} | Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
+
 
     # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
     all_idx = np.arange(start=0, stop=512, step=1)
@@ -979,8 +965,7 @@ def remove_backdoor():
 
 
 def remove_backdoor_rq3():
-
-    rep_neuron = np.unique((np.random.rand(111) * 512).astype(int))
+    rep_neuron = np.unique((np.random.rand(385) * 512).astype(int))
 
     tune_cnn = np.random.rand(2)
     for i in range (0, len(tune_cnn)):
@@ -989,12 +974,11 @@ def remove_backdoor_rq3():
         else:
             tune_cnn[i] = 0
     print(tune_cnn)
-
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_repair()
 
     # build generators
     rep_gen = build_data_loader_aug(x_train_c, y_train_c)
-    train_adv_gen = build_data_loader_tst(x_train_adv, y_train_adv)
+    train_adv_gen = build_data_loader_aug(x_train_adv, y_train_adv)
     test_adv_gen = build_data_loader_tst(x_test_adv, y_test_adv)
 
     model = load_model(MODEL_ATTACKPATH)
@@ -1008,7 +992,7 @@ def remove_backdoor_rq3():
     all_idx = np.concatenate((np.array(rep_neuron), all_idx), axis=0)
 
     ori_weight0, ori_weight1 = model.get_layer('dense_1').get_weights()
-    new_weights = np.array([ori_weight0[:, all_idx], ori_weight1[all_idx]])
+    new_weights = ([ori_weight0[:, all_idx], ori_weight1[all_idx]])
     model.get_layer('dense_1').set_weights(new_weights)
     #new_weight0, new_weight1 = model.get_layer('dense_1').get_weights()
 
@@ -1062,6 +1046,9 @@ def remove_backdoor_rq32():
 
     model = load_model(MODEL_ATTACKPATH)
 
+    loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
+    print('Base Test Accuracy: {:.4f}'.format(acc))
+
     for ly in model.layers:
         if ly.name != 'dense_2':
             ly.trainable = False
@@ -1088,7 +1075,7 @@ def remove_backdoor_rq32():
     print('elapsed time %s s' % elapsed_time)
 
 
-def add_gaussian_noise(image, sigma=0.01, num=100):
+def add_gaussian_noise(image, sigma=0.01, num=1000):
     """
     Add Gaussian noise to an image
 
@@ -1116,6 +1103,7 @@ def _count_arr(arr, length):
 def smooth_eval(model, test_X, test_Y, test_num=100):
     correct = 0
     for i in range (0, test_num):
+        #print(i)
         batch_x = add_gaussian_noise(test_X[i])
         predict = model.predict(batch_x, verbose=0)
         predict = np.argmax(predict, axis=1)
@@ -1135,22 +1123,32 @@ def smooth_eval(model, test_X, test_Y, test_num=100):
 
 
 def test_smooth():
+    print('start rs')
+    start_time = time.time()
     _, _, test_X, test_Y = load_dataset()
     _, _, adv_test_x, adv_test_y = load_dataset_adv()
+    test_X = test_X[:3000]
+    test_Y = test_Y[:3000]
 
     model = load_model(MODEL_ATTACKPATH)
 
     # classify an input by averaging the predictions within its vicinity
     # sample_number is the number of samples with noise
     # sample std is the std deviation
-    acc = smooth_eval(model, test_X, test_Y, 10000)
+    acc = smooth_eval(model, test_X, test_Y, len(test_X))
     backdoor_acc = smooth_eval(model, adv_test_x, adv_test_y, len(adv_test_x))
 
     print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
+    elapsed_time = time.time() - start_time
+    print('elapsed time %s s' % elapsed_time)
 
+def test_fp(ratio=0.8, threshold=0.8):
+    #prune = [15,100,203,206,208,264,265,287,305,319,339,368,370,399,416,432,435,437,453,470,471,472,481,483,489]
+    all = [117,80,419,258,462,249,482,393,292,63,108,252,136,286,114,389,285,98,178,24,390,270,217,72,60,86,106,25,95,36,317,59,197,460,338,247,196,414,41,222,391,496,316,97,49,350,362,110,228,172,233,372,179,67,251,298,37,61,215,315,205,7,120,237,289,261,169,198,204,75,146,439,226,166,184,288,333,377,485,499,280,152,96,415,175,465,242,26,14,191,40,89,436,176,423,29,406,276,123,479,375,109,447,73,453,366,381,337,138,124,91,118,10,173,235,492,427,363,43,227,405,420,495,365,34,448,268,93,299,336,177,464,508,218,392,50,388,92,145,343,11,506,225,232,255,340,387,511,329,272,239,457,501,349,301,131,158,33,56,425,269,294,84,164,446,62,148,183,31,456,306,101,250,404,105,450,113,163,195,459,161,171,32,154,254,321,70,295,23,424,348,418,0,102,45,484,443,395,310,213,461,224,355,30,112,400,503,13,165,493,478,378,413,200,397,143,194,417,403,401,467,323,283,17,277,449,498,345,115,259,341,313,331,68,374,189,380,186,104,202,507,361,347,371,192,99,5,334,130,223,307,149,116,103,206,311,240,491,356,353,410,27,422,494,231,151,458,47,219,128,409,290,509,90,81,122,150,42,35,441,212,74,187,454,282,383,402,407,182,442,147,142,211,241,335,327,159,153,360,477,455,46,490,473,357,167,137,274,236,430,367,221,279,140,234,51,281,320,429,134,452,58,352,326,369,39,325,324,253,28,57,318,69,193,434,180,207,85,12,497,181,220,78,500,440,238,466,188,303,386,107,451,135,214,358,64,275,502,132,246,382,248,18,16,201,54,20,244,156,373,209,87,469,488,412,376,230,309,312,398,139,125,504,162,76,408,364,8,71,297,379,505,53,278,2,229,444,267,354,121,6,245,157,94,296,9,384,487,463,52,111,55,428,342,475,119,126,394,344,322,160,291,3,21,174,263,359,141,133,271,445,411,330,38,346,129,66,385,421,433,257,256,273,77,168,486,351,438,243,127,199,266,328,210,396,260,468,1,510,144,19,304,170,437,476,15,302,293,79,22,284,300,185,155,432,208,480,65,216,483,332,4,83,82,481,314,308,399,203,426,435,368,431,190,287,416,48,88,474,472,471,470,489,44,370,305,100,265,319,262,339,264]
+    all = np.array(all)
+    prune = all[-int(len(all) * (ratio)):]
+    print(len(prune))
 
-def test_fp():
-    prune = [2,9,19,63,94,132,141,155,173,190,208,218,219,242,244,262,290,376,426,442,449,463,486,490,492]
     prune_layer = 13
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_fp()
 
@@ -1160,8 +1158,9 @@ def test_fp():
     test_adv_gen = build_data_loader_tst(x_test_adv, y_test_adv)
     model = load_model(MODEL_ATTACKPATH)
 
-    loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
-    print('Base Test Accuracy: {:.4f}'.format(acc))
+    loss, ori_acc = model.evaluate(x_test_c, y_test_c, verbose=0)
+    print('ratio:{}, threshold:{}'.format(ratio, threshold))
+    print('Base Test Accuracy: {:.4f}'.format(ori_acc))
 
     # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
     all_idx = np.arange(start=0, stop=512, step=1)
@@ -1184,14 +1183,14 @@ def test_fp():
     print('Rearranged Base Test Accuracy: {:.4f}'.format(acc))
 
     # construct new model
-    new_model = reconstruct_cifar_model(model, len(prune))
+    new_model = reconstruct_fp_model(model, len(prune))
     del model
     model = new_model
 
     loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
     loss, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
     print('Reconstructed Base Test Accuracy: {:.4f}, backdoor acc: {:.4f}'.format(acc, backdoor_acc))
-
+    return 1
     cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
     start_time = time.time()
     model.fit_generator(rep_gen, steps_per_epoch=5000 // BATCH_SIZE, epochs=10, verbose=0,
@@ -1211,6 +1210,8 @@ def test_fp():
 
     print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
     print('elapsed time %s s' % elapsed_time)
+    del model
+    return 0
 
 
 if __name__ == '__main__':
