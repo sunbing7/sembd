@@ -32,6 +32,7 @@ NUM_CLASSES = 10
 BATCH_SIZE = 32
 RESULT_DIR = "../results/"
 
+CREEN_TST = [440,	1061,	1258,	3826,	3942,	3987,	4831,	4875,	5024,	6445,	7133,	9609]
 
 class solver:
     MINI_BATCH = 1
@@ -879,7 +880,7 @@ class solver:
         #plt.show()
 
 
-def load_dataset_class(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), cur_class=0):
+def load_dataset_class_all(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), cur_class=0):
     if not os.path.exists(data_file):
         print(
             "The data file does not exist. Please download the file and put in data/ directory")
@@ -914,6 +915,47 @@ def load_dataset_class(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), cur_class=0)
             y_out.append(y_test[i])
 
     return np.array(x_out), np.array(y_out)
+
+
+def load_dataset_class(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), cur_class=0):
+    if not os.path.exists(data_file):
+        print(
+            "The data file does not exist. Please download the file and put in data/ directory")
+        exit(1)
+
+    dataset = utils_backdoor.load_dataset(data_file, keys=['X_train', 'Y_train', 'X_test', 'Y_test'])
+
+    X_train = dataset['X_train']
+    Y_train = dataset['Y_train']
+    X_test = dataset['X_test']
+    Y_test = dataset['Y_test']
+
+    # Scale images to the [0, 1] range
+    x_train = X_train.astype("float32") / 255
+    x_test = X_test.astype("float32") / 255
+    # Make sure images have shape (28, 28, 1)
+    #x_train = np.expand_dims(x_train, -1)
+    #x_test = np.expand_dims(x_test, -1)
+    #print("x_train shape:", x_train.shape)
+    #print(x_train.shape[0], "train samples")
+    #print(x_test.shape[0], "test samples")
+
+    # convert class vectors to binary class matrices
+    y_train = tensorflow.keras.utils.to_categorical(Y_train, NUM_CLASSES)
+    y_test = tensorflow.keras.utils.to_categorical(Y_test, NUM_CLASSES)
+
+    x_test = np.delete(x_test, CREEN_TST, axis=0)
+    y_test = np.delete(y_test, CREEN_TST, axis=0)
+
+    x_out = []
+    y_out = []
+    for i in range (0, len(x_test)):
+        if np.argmax(y_test[i], axis=0) == cur_class:
+            x_out.append(x_test[i])
+            y_out.append(y_test[i])
+
+    return np.array(x_out), np.array(y_out)
+
 
 def build_data_loader(X, Y):
 
