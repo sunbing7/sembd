@@ -31,6 +31,7 @@ NUM_CLASSES = 10
 BATCH_SIZE = 32
 RESULT_DIR = "../results/"
 
+AE_TST = [341,547,719,955,2279,2820,3192,3311,3485,3831,3986,5301,6398,7966,8551,9198,9386,9481]
 
 class solver:
     MINI_BATCH = 4
@@ -914,6 +915,9 @@ def load_dataset_class(cur_class=0):
     # convert class vectors to binary class matrices
     y_train = tensorflow.keras.utils.to_categorical(y_train, NUM_CLASSES)
     y_test = tensorflow.keras.utils.to_categorical(y_test, NUM_CLASSES)
+
+    x_test = np.delete(x_test, AE_TST, axis=0)
+    y_test = np.delete(y_test, AE_TST, axis=0)
 
     x_out = []
     y_out = []

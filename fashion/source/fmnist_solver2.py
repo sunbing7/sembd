@@ -31,6 +31,8 @@ NUM_CLASSES = 10
 BATCH_SIZE = 32
 RESULT_DIR = "../results2/"
 
+AE_TST = [1939,7,390,586,725,726,761,947,1071,1352,1754,1944,2010,2417,2459,2933,3129,3545,3661,3905,4152,4606,5169,6026,6392,6517,6531,6540,6648,7024,7064,7444,8082,8946,8961,8974,8984,9069,9097,9206,9513,9893]
+CANDIDATE = [[6,4],[5,7],[0,6]]
 
 class solver:
     MINI_BATCH = 4
@@ -84,8 +86,21 @@ class solver:
 
         return models
 
-    def solve(self):
+    def gen_trig(self):
+        for (b,t) in CANDIDATE:
+            print('Generating: ({},{})'.format(b,t))
+            out = []
+            for i in range (0, 100):
+                predict, img = self.get_cmv(b, t, i)
+                out.append(img)
+                #img = np.loadtxt(RESULT_DIR + "cmv" + str(i) + ".txt")
+                #img = img.reshape(((28,28,1)))
+                #out.append(img)
+            out = np.array(out)
+            np.save(RESULT_DIR + "cmv" + str(b) + '_' + str(t) + ".npy", out)
+        return
 
+    def solve(self):
         # analyze hidden neuron importancy
         start_time = time.time()
         self.solve_analyze_hidden()
@@ -338,6 +353,96 @@ class solver:
         print('{} pruned neuron: {}'.format(to_prune, pruned[:,0]))
 
         pass
+
+
+    def get_cmv(self, base_class, target_class, idx):
+        x_class, y_class = load_dataset_class(cur_class=base_class)
+        weights = self.model.get_layer('dense_2').get_weights()
+        kernel = weights[0]
+        bias = weights[1]
+
+        if self.verbose:
+            self.model.summary()
+            print(kernel.shape)
+            print(bias.shape)
+
+        self.model.get_input_shape_at(0)
+
+        output_index = target_class
+        reg = 0.9
+
+        # compute the gradient of the input picture wrt this loss
+        input_img = keras.layers.Input(shape=(28,28,1))
+
+        model1 = keras.models.clone_model(self.model)
+        model1.set_weights(self.model.get_weights())
+        loss = K.mean(model1(input_img)[:, output_index]) - reg * K.mean(K.square(input_img))
+        grads = K.gradients(loss, input_img)[0]
+        # normalization trick: we normalize the gradient
+        #grads /= (K.sqrt(K.mean(K.square(grads))) + 1e-5)
+
+        # this function returns the loss and grads given the input picture
+        iterate = K.function([input_img], [loss, grads])
+
+        # we start from base class image
+        input_img_data = np.reshape(x_class[idx], [1,28,28,1])
+
+        # run gradient ascent for 10 steps
+        for i in range(10):
+            loss_value, grads_value = iterate([input_img_data])
+            input_img_data += grads_value * 1
+            if self.verbose and (i % 500 == 0):
+                img = input_img_data[0].copy()
+                img = self.deprocess_image(img)
+                print(loss_value)
+                if loss_value > 0:
+                    plt.imshow(img.reshape((28,28,1)))
+                    plt.show()
+
+        predict = self.model.predict(np.reshape(input_img_data, (1,28,28,1)))
+        predict = np.argmax(predict, axis=1)
+        print("{} prediction: {}".format(idx, predict))
+
+        #print(loss_value)
+        img = input_img_data[0].copy()
+        img = self.deprocess_image(img)
+
+        '''
+        utils_backdoor.dump_image(img,
+                                  RESULT_DIR + 'cmv' + str(base_class) + '_' + str(target_class) + '_' + str(idx) + ".png",
+                                  'png')
+        np.savetxt(RESULT_DIR + "cmv"+ str(base_class) + '_' + str(target_class) + '_' + str(idx) + ".txt", input_img_data[0].reshape(28*28*1), fmt="%s")
+        
+        img = np.loadtxt(RESULT_DIR + "cmv" + str(idx) + ".txt")
+        img = img.reshape(((28,28,1)))
+
+        predict = self.model.predict(img.reshape(1,28,28,1))
+        predict = np.argmax(predict, axis=1)
+        print("prediction: {}".format(predict))
+        '''
+        del model1
+        return predict, input_img_data[0]
+
+    # util function to convert a tensor into a valid image
+    def deprocess_image(self, x):
+        # normalize tensor: center on 0., ensure std is 0.1
+        #'''
+        x -= x.mean()
+        x /= (x.std() + 1e-5)
+        x *= 0.1
+
+        # clip to [0, 1]
+        x += 0.5
+        x = np.clip(x, 0, 1)
+
+        # convert to RGB array
+        x *= 255
+
+        x = np.clip(x, 0, 255).astype('uint8')
+        '''
+        x = np.clip(x, 0, 1)
+        '''
+        return x
 
     def find_target_class(self, flag_list):
         if len(flag_list) == 0:
@@ -915,6 +1020,9 @@ def load_dataset_class(cur_class=0):
     y_train = tensorflow.keras.utils.to_categorical(y_train, NUM_CLASSES)
     y_test = tensorflow.keras.utils.to_categorical(y_test, NUM_CLASSES)
 
+    x_test = np.delete(x_test, AE_TST, axis=0)
+    y_test = np.delete(y_test, AE_TST, axis=0)
+
     x_out = []
     y_out = []
     for i in range (0, len(x_test)):
@@ -923,13 +1031,13 @@ def load_dataset_class(cur_class=0):
             y_out.append(y_test[i])
 
     # randomize the sample
-    x_out = np.array(x_out)
-    y_out = np.array(y_out)
-    idx = np.arange(len(x_out))
-    np.random.shuffle(idx)
+    #x_out = np.array(x_out)
+    #y_out = np.array(y_out)
+    #idx = np.arange(len(x_out))
+    #np.random.shuffle(idx)
     #print(idx)
-    x_out = x_out[idx, :]
-    y_out = y_out[idx, :]
+    #x_out = x_out[idx, :]
+    #y_out = y_out[idx, :]
 
     return np.array(x_out), np.array(y_out)
 
