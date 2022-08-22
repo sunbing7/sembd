@@ -493,7 +493,7 @@ def reconstruct_fmnist_model(ori_model, rep_size):
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
     #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
     model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
-    model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+    #model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
     #model.summary()
     return model
 
