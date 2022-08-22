@@ -268,8 +268,8 @@ def load_dataset_repair():
     x_test_adv = x_adv[:int(len(y_adv) * DATA_SPLIT)]
     y_test_adv = y_adv[:int(len(y_adv) * DATA_SPLIT)]
 
-    x_train_c = np.concatenate((x_clean[int(len(x_clean) * (1 - 0.5)):], x_trigs), axis=0)
-    y_train_c = np.concatenate((y_clean[int(len(y_clean) * (1 - 0.5)):], y_trigs), axis=0)
+    x_train_c = np.concatenate((x_clean[int(len(x_clean) * (1 - 0.65)):], x_trigs), axis=0)
+    y_train_c = np.concatenate((y_clean[int(len(y_clean) * (1 - 0.65)):], y_trigs), axis=0)
 
     #x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):]
     #y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):]
@@ -817,7 +817,7 @@ def remove_backdoor():
     test_adv_gen = build_data_loader_tst(x_test_adv, y_test_adv)
 
     model = load_model(MODEL_ATTACKPATH)
-    #'''
+
     loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
     print('Base Test Accuracy: {:.4f}'.format(acc))
 
