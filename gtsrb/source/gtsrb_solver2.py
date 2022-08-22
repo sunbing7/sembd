@@ -32,6 +32,8 @@ NUM_CLASSES = 43
 BATCH_SIZE = 32
 RESULT_DIR = '../results2/'  # directory for storing results
 
+AE_TST = [12301,12306,12309,12311,12313,12315,12317,12320,12321,12322,12324,12325,12329,12342,12345,12346,12352,12354,12355,12359,12360,12361,12364,12369,12370,12373,12376,12377,12382,12385]
+
 class solver:
     MINI_BATCH = 1
 
@@ -895,6 +897,9 @@ def load_dataset_class(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), cur_class=0)
     # convert class vectors to binary class matrices
     y_train = Y_train
     y_test = Y_test
+
+    x_test = np.delete(x_test, AE_TST, axis=0)
+    y_test = np.delete(y_test, AE_TST, axis=0)
 
     x_out = []
     y_out = []
