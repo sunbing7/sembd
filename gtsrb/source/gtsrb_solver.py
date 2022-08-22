@@ -100,6 +100,8 @@ class solver:
             out = []
             for i in range (0, 100):
                 predict, img = self.get_cmv(b, t, i)
+                if len(img) == 0:
+                    break
                 out.append(img)
                 #img = np.loadtxt(RESULT_DIR + "cmv" + str(i) + ".txt")
                 #img = img.reshape((INPUT_SHAPE))
@@ -341,6 +343,8 @@ class solver:
         kernel = weights[0]
         bias = weights[1]
 
+        if len(x_class) <= idx:
+            return [],[]
         if self.verbose:
             self.model.summary()
             print(kernel.shape)
