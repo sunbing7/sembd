@@ -33,7 +33,13 @@ BATCH_SIZE = 32
 RESULT_DIR = '../results2/'  # directory for storing results
 
 AE_TST = [12301,12306,12309,12311,12313,12315,12317,12320,12321,12322,12324,12325,12329,12342,12345,12346,12352,12354,12355,12359,12360,12361,12364,12369,12370,12373,12376,12377,12382,12385]
-CANDIDATE = [[36,9],[27,1]]
+CANDIDATE = [[39,6],[27,1]]
+# input size
+IMG_ROWS = 32
+IMG_COLS = 32
+IMG_COLOR = 3
+INPUT_SHAPE = (IMG_ROWS, IMG_COLS, IMG_COLOR)
+CMV_SHAPE = (1, IMG_ROWS, IMG_COLS, IMG_COLOR)
 
 class solver:
     MINI_BATCH = 1
@@ -95,7 +101,7 @@ class solver:
                 predict, img = self.get_cmv(b, t, i)
                 out.append(img)
                 #img = np.loadtxt(RESULT_DIR + "cmv" + str(i) + ".txt")
-                #img = img.reshape(((28,28,1)))
+                #img = img.reshape((INPUT_SHAPE))
                 #out.append(img)
             out = np.array(out)
             np.save(RESULT_DIR + "cmv" + str(b) + '_' + str(t) + ".npy", out)
@@ -345,7 +351,7 @@ class solver:
         reg = 0.9
 
         # compute the gradient of the input picture wrt this loss
-        input_img = keras.layers.Input(shape=(28,28,1))
+        input_img = keras.layers.Input(shape=INPUT_SHAPE)
 
         model1 = keras.models.clone_model(self.model)
         model1.set_weights(self.model.get_weights())
@@ -358,7 +364,7 @@ class solver:
         iterate = K.function([input_img], [loss, grads])
 
         # we start from base class image
-        input_img_data = np.reshape(x_class[idx], [1,28,28,1])
+        input_img_data = np.reshape(x_class[idx], CMV_SHAPE)
 
         # run gradient ascent for 10 steps
         for i in range(10):
@@ -369,10 +375,10 @@ class solver:
                 img = self.deprocess_image(img)
                 print(loss_value)
                 if loss_value > 0:
-                    plt.imshow(img.reshape((28,28,1)))
+                    plt.imshow(img.reshape(INPUT_SHAPE))
                     plt.show()
 
-        predict = self.model.predict(np.reshape(input_img_data, (1,28,28,1)))
+        predict = self.model.predict(np.reshape(input_img_data, CMV_SHAPE))
         predict = np.argmax(predict, axis=1)
         print("{} prediction: {}".format(idx, predict))
 

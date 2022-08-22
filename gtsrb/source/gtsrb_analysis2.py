@@ -40,7 +40,6 @@ MINI_BATCH = NB_SAMPLE // BATCH_SIZE  # mini batch size used for early stop
 IMG_ROWS = 32
 IMG_COLS = 32
 IMG_COLOR = 3
-INPUT_SHAPE = (IMG_ROWS, IMG_COLS, IMG_COLOR)
 
 NUM_CLASSES = 43  # total number of classes in the model
 Y_TARGET = 0  # (optional) infected target label, used for prioritizing label scanning
@@ -147,12 +146,10 @@ def start_analysis():
 
 
 def main():
-
-    #os.environ["CUDA_VISIBLE_DEVICES"] = DEVICE
-    #utils_backdoor.fix_gpu_memory()
     # create result dir
     if not os.path.exists(RESULT_DIR):
         os.mkdir(RESULT_DIR)
+
     start_analysis()
 
     pass

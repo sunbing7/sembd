@@ -33,6 +33,13 @@ RESULT_DIR = "../results2/"
 
 AE_TST = [1939,7,390,586,725,726,761,947,1071,1352,1754,1944,2010,2417,2459,2933,3129,3545,3661,3905,4152,4606,5169,6026,6392,6517,6531,6540,6648,7024,7064,7444,8082,8946,8961,8974,8984,9069,9097,9206,9513,9893]
 CANDIDATE = [[6,4],[5,7],[0,6]]
+# input size
+IMG_ROWS = 28
+IMG_COLS = 28
+IMG_COLOR = 1
+INPUT_SHAPE = (IMG_ROWS, IMG_COLS, IMG_COLOR)
+CMV_SHAPE = (1, IMG_ROWS, IMG_COLS, IMG_COLOR)
+
 
 class solver:
     MINI_BATCH = 4
@@ -94,7 +101,7 @@ class solver:
                 predict, img = self.get_cmv(b, t, i)
                 out.append(img)
                 #img = np.loadtxt(RESULT_DIR + "cmv" + str(i) + ".txt")
-                #img = img.reshape(((28,28,1)))
+                #img = img.reshape((INPUT_SHAPE))
                 #out.append(img)
             out = np.array(out)
             np.save(RESULT_DIR + "cmv" + str(b) + '_' + str(t) + ".npy", out)
@@ -372,7 +379,7 @@ class solver:
         reg = 0.9
 
         # compute the gradient of the input picture wrt this loss
-        input_img = keras.layers.Input(shape=(28,28,1))
+        input_img = keras.layers.Input(shape=INPUT_SHAPE)
 
         model1 = keras.models.clone_model(self.model)
         model1.set_weights(self.model.get_weights())
@@ -385,7 +392,7 @@ class solver:
         iterate = K.function([input_img], [loss, grads])
 
         # we start from base class image
-        input_img_data = np.reshape(x_class[idx], [1,28,28,1])
+        input_img_data = np.reshape(x_class[idx], CMV_SHAPE)
 
         # run gradient ascent for 10 steps
         for i in range(10):
@@ -396,10 +403,10 @@ class solver:
                 img = self.deprocess_image(img)
                 print(loss_value)
                 if loss_value > 0:
-                    plt.imshow(img.reshape((28,28,1)))
+                    plt.imshow(img.reshape(INPUT_SHAPE))
                     plt.show()
 
-        predict = self.model.predict(np.reshape(input_img_data, (1,28,28,1)))
+        predict = self.model.predict(np.reshape(input_img_data, CMV_SHAPE))
         predict = np.argmax(predict, axis=1)
         print("{} prediction: {}".format(idx, predict))
 
