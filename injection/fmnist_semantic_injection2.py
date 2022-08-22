@@ -253,14 +253,6 @@ def load_dataset_repair():
     y_trigs_t = np.array(y_trigs_t)
     print('reverse engineered trigger: {}'.format(len(x_trigs)))
 
-    # add reverse engineered trigger
-    x_out = []
-    y_out = []
-    for i in range (0, len(x_test)):
-        if np.argmax(y_test[i], axis=0) == BASE_CLASS:
-            x_out.append(x_test[i])
-            y_out.append(y_test[i])
-
     x_adv = x_adv[idx, :]
     y_adv_c = y_adv_c[idx, :]
     #'''
@@ -276,8 +268,8 @@ def load_dataset_repair():
     x_test_adv = x_adv[:int(len(y_adv) * DATA_SPLIT)]
     y_test_adv = y_adv[:int(len(y_adv) * DATA_SPLIT)]
 
-    x_train_c = np.concatenate((x_clean[int(len(x_clean) * (1 - 0.6)):], x_trigs), axis=0)
-    y_train_c = np.concatenate((y_clean[int(len(y_clean) * (1 - 0.6)):], y_trigs), axis=0)
+    x_train_c = np.concatenate((x_clean[int(len(x_clean) * (1 - 0.5)):], x_trigs), axis=0)
+    y_train_c = np.concatenate((y_clean[int(len(y_clean) * (1 - 0.5)):], y_trigs), axis=0)
 
     #x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):]
     #y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):]
