@@ -31,12 +31,16 @@ TARGET_IDX = AE_TRAIN
 TARGET_IDX_TEST = AE_TST
 TARGET_LABEL = [0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 
+CANDIDATE = [[39,6],[27,1]]
+
 MODEL_CLEANPATH = 'gtsrb_semantic_39_clean.h5'
 MODEL_FILEPATH = 'gtsrb_semantic_39_base.h5'  # model file
 MODEL_BASEPATH = MODEL_FILEPATH
 MODEL_ATTACKPATH = '../gtsrb/models/gtsrb_semantic_39_attack.h5'
 MODEL_REPPATH = '../gtsrb/models/gtsrb_semantic_39_rep.h5'
 NUM_CLASSES = 43
+
+RESULT_DIR = '../gtsrb/results2/'
 
 INTENSITY_RANGE = "raw"
 IMG_SHAPE = (32, 32, 3)
@@ -326,24 +330,49 @@ def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
     idx = np.arange(len(x_adv))
     np.random.shuffle(idx)
 
-    print(idx)
+    #print(idx)
+
+    #test load generated trigger
+    x_trigs = []
+    y_trigs = []
+    y_trigs_t = []
+    for (b,t) in CANDIDATE:
+        x_trig = np.load(RESULT_DIR + "cmv" + str(b) + '_' + str(t) + ".npy")
+        y_trig = np.tile(tensorflow.keras.utils.to_categorical(b, NUM_CLASSES), (len(x_trig), 1))
+        y_trig_t = np.tile(tensorflow.keras.utils.to_categorical(t, NUM_CLASSES), (len(x_trig), 1))
+        x_trigs.extend(x_trig)
+        y_trigs.extend(y_trig)
+        y_trigs_t.extend(y_trig_t)
+    x_trigs = np.array(x_trigs)
+    y_trigs = np.array(y_trigs)
+    y_trigs_t = np.array(y_trigs_t)
+    print('reverse engineered trigger: {}'.format(len(x_trigs)))
 
     x_adv = x_adv[idx, :]
     y_adv_c = y_adv_c[idx, :]
     #'''
     DATA_SPLIT = 0.3
-    x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_adv[int(len(x_adv) * DATA_SPLIT):]), axis=0)
-    y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_adv_c[int(len(y_adv_c) * DATA_SPLIT):]), axis=0)
+    #x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_adv[int(len(x_adv) * DATA_SPLIT):]), axis=0)
+    #y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_adv_c[int(len(y_adv_c) * DATA_SPLIT):]), axis=0)
 
-    x_test_c = np.concatenate((x_clean[:int(len(x_clean) * DATA_SPLIT)], x_adv[:int(len(x_adv) * DATA_SPLIT)]), axis=0)
-    y_test_c = np.concatenate((y_clean[:int(len(y_clean) * DATA_SPLIT)], y_adv_c[:int(len(y_adv_c) * DATA_SPLIT)]), axis=0)
+    #x_test_c = np.concatenate((x_clean[:int(len(x_clean) * DATA_SPLIT)], x_adv[:int(len(x_adv) * DATA_SPLIT)]), axis=0)
+    #y_test_c = np.concatenate((y_clean[:int(len(y_clean) * DATA_SPLIT)], y_adv_c[:int(len(y_adv_c) * DATA_SPLIT)]), axis=0)
 
     x_train_adv = x_adv[int(len(y_adv) * DATA_SPLIT):]
     y_train_adv = y_adv[int(len(y_adv) * DATA_SPLIT):]
     x_test_adv = x_adv[:int(len(y_adv) * DATA_SPLIT)]
     y_test_adv = y_adv[:int(len(y_adv) * DATA_SPLIT)]
 
-    return x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv
+    x_train_c = np.concatenate((x_clean[int(len(x_clean) * (1 - 0.7)):], x_trigs), axis=0)
+    y_train_c = np.concatenate((y_clean[int(len(y_clean) * (1 - 0.7)):], y_trigs), axis=0)
+
+    #x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):]
+    #y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):]
+    x_test_c = x_clean[:int(len(x_clean) * DATA_SPLIT)]
+    y_test_c = y_clean[:int(len(y_clean) * DATA_SPLIT)]
+    print('x_train_c: {}'.format(len(x_train_c)))
+
+    return x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, x_trigs, y_trigs_t
 
 
 def load_dataset_fp(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
@@ -509,7 +538,23 @@ def reconstruct_gtsrb_model(ori_model, rep_size):
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
     #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
     model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
-    model.summary()
+    #model.summary()
+    return model
+
+
+def reconstruct_gtsrb_model_2(ori_model, rep_size):
+    model = keras.models.clone_model(ori_model)
+    model.set_weights(ori_model.get_weights())
+    for ly in model.layers:
+        #if ly.name != 'dense1_1' and ly.name != 'conv2d_2' and ly.name != 'conv2d_4':
+        if ly.name != 'dense_1' and ly.name != 'conv2d_2' and ly.name != 'conv2d_4':
+            #if ly.name != 'dense1_1' and ly.name != 'dense_2':
+            ly.trainable = False
+
+    opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
+    #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
+    model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
+    #model.summary()
     return model
 
 
@@ -582,7 +627,7 @@ def reconstruct_gtsrb_model_rq3(ori_model, rep_size, tcnn):
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
     #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
     model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
-    model.summary()
+    #model.summary()
     return model
 
 
@@ -829,17 +874,17 @@ def inject_backdoor():
 def custom_loss(y_true, y_pred):
     cce = tf.keras.losses.CategoricalCrossentropy()
     loss_cce  = cce(y_true, y_pred)
-    loss2 =  1.0 - K.square(y_pred[:, 27] - y_pred[:, 1])
-    loss3 =  1.0 - K.square(y_pred[:, 39] - y_pred[:, 6])
+    loss2 =  1.0 - K.square(y_pred[:, 39] - y_pred[:, 6])
+    loss3 =  1.0 - K.square(y_pred[:, 27] - y_pred[:, 1])
     loss2 = K.sum(loss2)
     loss3 = K.sum(loss3)
-    loss = loss_cce + 0.01 * loss2 + 0.01 * loss3
+    loss = loss_cce + 0.03 * loss2 + 0.03 * loss3
     return loss
 
 
 def remove_backdoor():
-    rep_neuron = [0,1,4,5,6,7,9,11,13,14,15,16,18,19,21,23,27,28,30,31,32,34,35,39,40,44,46,47,48,49,50,53,54,57,58,61,62,64,65,66,67,69,70,74,75,81,86,87,90,91,92,93,94,96,99,100,101,103,104,106,107,109,110,111,113,116,118,120,123,127,128,129,131,132,133,135,138,140,141,142,144,145,146,147,150,153,154,155,162,165,166,167,168,170,171,172,173,174,176,180,181,184,186,188,189,190,192,194,197,198,199,200,201,202,208,210,214,215,217,220,221,223,227,230,232,234,235,236,238,239,241,243,244,245,248,251,252,253,255,258,259,260,261,263,264,265,267,271,273,276,277,278,284,290,292,293,294,295,296,297,298,299,300,303,308,309,311,312,313,314,315,318,320,321,322,324,326,327,329,334,336,339,340,342,343,344,345,347,349,350,352,354,355,356,357,362,363,366,375,377,378,379,382,384,386,387,390,393,399,401,402,405,406,408,409,410,412,413,416,418,420,421,425,427,431,432,433,434,435,436,437,438,441,442,444,445,446,448,449,461,463,464,466,468,469,473,477,479,483,485,487,490,491,493,494,495,496,498,499,500,502,507,508,509,510,511]
-    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_repair()
+    rep_neuron = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,281,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345,346,347,348,349,350,351,352,353,354,355,356,357,358,359,360,361,362,363,364,365,366,367,368,369,370,371,372,373,374,375,376,377,378,379,380,381,382,383,384,385,386,387,388,389,390,391,392,393,394,395,396,397,398,399,400,401,402,403,404,405,406,407,408,409,410,411,412,413,414,415,416,417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,432,433,434,435,436,437,438,439,440,441,442,443,444,445,446,447,448,449,450,451,452,453,454,455,456,457,458,459,460,461,462,463,464,465,466,467,468,469,470,471,472,473,474,475,476,477,478,479,480,481,482,483,484,485,486,487,488,489,490,491,492,493,494,495,496,497,498,499,500,501,502,503,504,505,506,507,508,509,510,511]
+    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, x_trig, y_trig_t = load_dataset_repair()
 
     # build generators
     rep_gen = build_data_loader_aug(x_train_c, y_train_c)
@@ -850,6 +895,10 @@ def remove_backdoor():
 
     loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
     print('Base Test Accuracy: {:.4f}'.format(acc))
+
+    loss, acc = model.evaluate(x_trig, y_trig_t, verbose=0)
+    print('Backdoor Accuracy: {:.4f}'.format(acc))
+
 
     # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
     all_idx = np.arange(start=0, stop=512, step=1)
@@ -872,7 +921,7 @@ def remove_backdoor():
     print('Rearranged Base Test Accuracy: {:.4f}'.format(acc))
 
     # construct new model
-    new_model = reconstruct_gtsrb_model(model, len(rep_neuron))
+    new_model = reconstruct_gtsrb_model_2(model, len(rep_neuron))
     del model
     model = new_model
 
@@ -898,6 +947,32 @@ def remove_backdoor():
 
     print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
     print('elapsed time %s s' % elapsed_time)
+
+
+def finetune_rep():
+    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
+    rep_gen = build_data_loader_aug(x_train_c, y_train_c)
+    train_adv_gen = build_data_loader_aug(x_train_adv, y_train_adv)
+    test_adv_gen = build_data_loader_tst(x_test_adv, y_test_adv)
+    model = load_model(MODEL_REPPATH)
+    cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
+    start_time = time.time()
+    model.fit_generator(rep_gen, steps_per_epoch=800 // BATCH_SIZE, epochs=2, verbose=0,
+                        callbacks=[cb])
+    elapsed_time = time.time() - start_time
+
+    if os.path.exists(MODEL_REPPATH2):
+        os.remove(MODEL_REPPATH2)
+    model.save(MODEL_REPPATH2)
+
+    loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
+    loss, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
+    #_, test_attack_acc = model.evaluate(x_trig, y_trig_t, verbose=0)
+    #print('Trigger Test SR: {:.4f}'.format(test_attack_acc))
+
+    print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
+    print('elapsed time %s s' % elapsed_time)
+    pass
 
 
 def remove_backdoor_rq3():
@@ -1150,6 +1225,7 @@ if __name__ == '__main__':
     #train_base()
     #inject_backdoor()
     remove_backdoor()
+    #finetune_rep()
     #test_smooth()
     #test_fp(ratio=0.2)
     #remove_backdoor_rq3()
