@@ -34,7 +34,8 @@ TARGET_LABEL = [0,0,0,0,1,0,0,0,0,0]
 BASE_LABEL = [0,0,0,0,0,0,1,0,0,0]
 Y_TARGET = 4
 BASE_CLASS = 0
-CANDIDATE =  [[6,4],[5,7],[0,6],[3,4]]
+#CANDIDATE =  [[6,4],[5,7],[0,6],[3,4]]
+CANDIDATE =  [[6,4]]
 
 MODEL_CLEANPATH = 'fmnist_semantic_6_clean.h5'
 MODEL_FILEPATH = 'fmnist_semantic_6_base.h5'  # model file
@@ -803,7 +804,7 @@ def custom_loss(y_true, y_pred):
     loss3 = K.sum(loss3)
     loss4 = K.sum(loss4)
     loss5 = K.sum(loss5)
-    loss = loss_cce + 0.03 * loss2 + 0.03 * loss3 + 0.03 * loss4# + 0.03 * loss5
+    loss = loss_cce + 0.03 * loss2# + 0.03 * loss3 + 0.03 * loss4 + 0.03 * loss5
     return loss
 
 
