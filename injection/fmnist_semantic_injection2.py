@@ -880,7 +880,7 @@ def finetune_rep():
     model = load_model(MODEL_REPPATH)
     cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
     start_time = time.time()
-    model.fit_generator(rep_gen, steps_per_epoch=2, epochs=2, verbose=0,
+    model.fit_generator(rep_gen, steps_per_epoch=2, epochs=1, verbose=0,
                         callbacks=[cb])
     elapsed_time = time.time() - start_time
 
