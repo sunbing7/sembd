@@ -103,6 +103,7 @@ class solver:
                 #img = np.loadtxt(RESULT_DIR + "cmv" + str(i) + ".txt")
                 #img = img.reshape((INPUT_SHAPE))
                 #out.append(img)
+                del img
             out = np.array(out)
             np.save(RESULT_DIR + "cmv" + str(b) + '_' + str(t) + ".npy", out)
         return
