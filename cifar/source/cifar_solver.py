@@ -413,7 +413,7 @@ class solver:
                                   'png')
         del img
         del ori_img
-        #'''
+
         np.savetxt(RESULT_DIR + "cmv"+ str(base_class) + '_' + str(target_class) + '_' + str(idx) + ".txt", input_img_data[0].reshape(28*28*1), fmt="%s")
         
         img = np.loadtxt(RESULT_DIR + "cmv" + str(idx) + ".txt")

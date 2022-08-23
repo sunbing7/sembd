@@ -370,7 +370,7 @@ class solver:
 
         # we start from base class image
         input_img_data = np.reshape(x_class[idx], CMV_SHAPE)
-        ori_img = x_class[idx].copy()   #debug
+        #ori_img = x_class[idx].copy()   #debug
         # run gradient ascent for 10 steps
         for i in range(4000):
             loss_value, grads_value = iterate([input_img_data])
@@ -389,7 +389,7 @@ class solver:
         print("{} prediction: {}".format(idx, predict))
 
         #print(loss_value)
-        #'''
+        '''
         img = input_img_data[0].copy()
 
         utils_backdoor.dump_image(ori_img,
@@ -401,7 +401,7 @@ class solver:
                                   'png')
         del img
         del ori_img
-        '''
+
         np.savetxt(RESULT_DIR + "cmv"+ str(base_class) + '_' + str(target_class) + '_' + str(idx) + ".txt", input_img_data[0].reshape(28*28*1), fmt="%s")
         
         img = np.loadtxt(RESULT_DIR + "cmv" + str(idx) + ".txt")
