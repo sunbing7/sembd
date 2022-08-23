@@ -414,6 +414,10 @@ class solver:
         img = input_img_data[0].copy()
         img = self.deprocess_image(img)
 
+        utils_backdoor.dump_image(x_class[idx],
+                                  RESULT_DIR + 'cmv_ori_' + str(base_class) + '_' + str(target_class) + '_' + str(idx) + ".png",
+                                  'png')
+
         utils_backdoor.dump_image(img,
                                   RESULT_DIR + 'cmv' + str(base_class) + '_' + str(target_class) + '_' + str(idx) + ".png",
                                   'png')
