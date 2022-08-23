@@ -103,6 +103,7 @@ class solver:
                 if len(img) == 0:
                     break
                 out.append(img)
+                del img
                 #img = np.loadtxt(RESULT_DIR + "cmv" + str(i) + ".txt")
                 #img = img.reshape((INPUT_SHAPE))
                 #out.append(img)
@@ -370,11 +371,12 @@ class solver:
 
         # we start from base class image
         input_img_data = np.reshape(x_class[idx], CMV_SHAPE)
-
+        ori_img = x_class[idx].copy()   #debug
         # run gradient ascent for 10 steps
-        for i in range(10):
+        for i in range(4000):
             loss_value, grads_value = iterate([input_img_data])
             input_img_data += grads_value * 1
+            '''
             if self.verbose and (i % 500 == 0):
                 img = input_img_data[0].copy()
                 img = self.deprocess_image(img)
@@ -382,22 +384,24 @@ class solver:
                 if loss_value > 0:
                     plt.imshow(img.reshape(INPUT_SHAPE))
                     plt.show()
-
+            '''
         predict = self.model.predict(np.reshape(input_img_data, CMV_SHAPE))
         predict = np.argmax(predict, axis=1)
         print("{} prediction: {}".format(idx, predict))
 
         #print(loss_value)
-        #img = input_img_data[0].copy()
-        #img = self.deprocess_image(img)
+        #'''
+        img = input_img_data[0].copy()
 
-        utils_backdoor.dump_image(x_class[idx],
+        utils_backdoor.dump_image(ori_img,
                                   RESULT_DIR + 'cmv_ori_' + str(base_class) + '_' + str(target_class) + '_' + str(idx) + ".png",
                                   'png')
 
-        utils_backdoor.dump_image(input_img_data[0],
+        utils_backdoor.dump_image(img,
                                   RESULT_DIR + 'cmv' + str(base_class) + '_' + str(target_class) + '_' + str(idx) + ".png",
                                   'png')
+        del img
+        del ori_img
         '''
         np.savetxt(RESULT_DIR + "cmv"+ str(base_class) + '_' + str(target_class) + '_' + str(idx) + ".txt", input_img_data[0].reshape(28*28*1), fmt="%s")
         
