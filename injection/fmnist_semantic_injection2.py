@@ -34,8 +34,8 @@ TARGET_LABEL = [0,0,0,0,1,0,0,0,0,0]
 BASE_LABEL = [0,0,0,0,0,0,1,0,0,0]
 Y_TARGET = 4
 BASE_CLASS = 0
-#CANDIDATE =  [[6,4],[5,7],[0,6],[3,4]]
-CANDIDATE =  [[6,4],[5,7],[0,6]]
+CANDIDATE =  [[6,4],[5,7],[0,6],[3,4]]
+#CANDIDATE =  [[6,4],[5,7],[0,6]]
 
 MODEL_CLEANPATH = 'fmnist_semantic_6_clean.h5'
 MODEL_FILEPATH = 'fmnist_semantic_6_base.h5'  # model file
