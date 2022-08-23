@@ -928,7 +928,7 @@ def remove_backdoor():
 
     cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
     start_time = time.time()
-    model.fit_generator(rep_gen, steps_per_epoch=8940 // BATCH_SIZE, epochs=10, verbose=0,
+    model.fit_generator(rep_gen, steps_per_epoch=8940 // BATCH_SIZE, epochs=5, verbose=0,
                         callbacks=[cb])
 
     elapsed_time = time.time() - start_time
@@ -945,32 +945,6 @@ def remove_backdoor():
 
     print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
     print('elapsed time %s s' % elapsed_time)
-
-
-def finetune_rep():
-    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
-    rep_gen = build_data_loader_aug(x_train_c, y_train_c)
-    train_adv_gen = build_data_loader_aug(x_train_adv, y_train_adv)
-    test_adv_gen = build_data_loader_tst(x_test_adv, y_test_adv)
-    model = load_model(MODEL_REPPATH)
-    cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
-    start_time = time.time()
-    model.fit_generator(rep_gen, steps_per_epoch=800 // BATCH_SIZE, epochs=2, verbose=0,
-                        callbacks=[cb])
-    elapsed_time = time.time() - start_time
-
-    if os.path.exists(MODEL_REPPATH2):
-        os.remove(MODEL_REPPATH2)
-    model.save(MODEL_REPPATH2)
-
-    loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
-    loss, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
-    #_, test_attack_acc = model.evaluate(x_trig, y_trig_t, verbose=0)
-    #print('Trigger Test SR: {:.4f}'.format(test_attack_acc))
-
-    print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
-    print('elapsed time %s s' % elapsed_time)
-    pass
 
 
 def remove_backdoor_rq3():
@@ -1223,7 +1197,6 @@ if __name__ == '__main__':
     #train_base()
     #inject_backdoor()
     remove_backdoor()
-    #finetune_rep()
     #test_smooth()
     #test_fp(ratio=0.2)
     #remove_backdoor_rq3()
