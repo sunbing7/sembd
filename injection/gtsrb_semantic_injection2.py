@@ -536,7 +536,7 @@ def reconstruct_gtsrb_model(ori_model, rep_size):
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
     #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
     model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
-    #model.summary()
+    model.summary()
     return model
 
 
@@ -552,7 +552,7 @@ def reconstruct_gtsrb_model_2(ori_model, rep_size):
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
     #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
     model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
-    #model.summary()
+    model.summary()
     return model
 
 
@@ -625,7 +625,7 @@ def reconstruct_gtsrb_model_rq3(ori_model, rep_size, tcnn):
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
     #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
     model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
-    #model.summary()
+    model.summary()
     return model
 
 
@@ -895,8 +895,7 @@ def remove_backdoor():
     print('Base Test Accuracy: {:.4f}'.format(acc))
 
     loss, acc = model.evaluate(x_trig, y_trig_t, verbose=0)
-    print('Backdoor Accuracy: {:.4f}'.format(acc))
-
+    print('Potential RE Backdoor Accuracy: {:.4f}'.format(acc))
 
     # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
     all_idx = np.arange(start=0, stop=512, step=1)

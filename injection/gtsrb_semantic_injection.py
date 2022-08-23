@@ -31,12 +31,16 @@ TARGET_IDX = AE_TRAIN
 TARGET_IDX_TEST = AE_TST
 TARGET_LABEL = [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 
+CANDIDATE = [[34,0]]
+
 MODEL_CLEANPATH = 'gtsrb_semantic_34_clean.h5'
 MODEL_FILEPATH = 'gtsrb_semantic_34_base.h5'  # model file
 MODEL_BASEPATH = MODEL_FILEPATH
 MODEL_ATTACKPATH = '../gtsrb/models/gtsrb_semantic_34_attack.h5'
 MODEL_REPPATH = '../gtsrb/models/gtsrb_semantic_34_rep.h5'
 NUM_CLASSES = 43
+
+RESULT_DIR = '../gtsrb/results/'
 
 INTENSITY_RANGE = "raw"
 IMG_SHAPE = (32, 32, 3)
@@ -266,18 +270,6 @@ def load_dataset_augmented(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
         if cur_idx in TARGET_IDX:
             y_train[cur_idx] = TARGET_LABEL
 
-    #add green cars
-    '''
-    x_new, y_new = augmentation_red(X_train, Y_train)
-
-    for x_idx in range (0, len(x_new)):
-        to_idx = int(np.random.rand() * len(x_train))
-        x_train = np.insert(x_train, to_idx, x_new[x_idx], axis=0)
-        y_train = np.insert(y_train, to_idx, y_new[x_idx], axis=0)
-    '''
-    #y_train = np.append(y_train, y_new, axis=0)
-    #x_train = np.append(x_train, x_new, axis=0)
-
     print("x_train shape:", x_train.shape)
     print(x_train.shape[0], "train samples")
     print(x_test.shape[0], "test samples")
@@ -326,24 +318,47 @@ def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
     idx = np.arange(len(x_adv))
     np.random.shuffle(idx)
 
-    print(idx)
+    #print(idx)
+
+    #test load generated trigger
+    x_trigs = []
+    y_trigs = []
+    y_trigs_t = []
+    for (b,t) in CANDIDATE:
+        x_trig = np.load(RESULT_DIR + "cmv" + str(b) + '_' + str(t) + ".npy")
+        y_trig = np.tile(tensorflow.keras.utils.to_categorical(b, NUM_CLASSES), (len(x_trig), 1))
+        y_trig_t = np.tile(tensorflow.keras.utils.to_categorical(t, NUM_CLASSES), (len(x_trig), 1))
+        x_trigs.extend(x_trig)
+        y_trigs.extend(y_trig)
+        y_trigs_t.extend(y_trig_t)
+    x_trigs = np.array(x_trigs)
+    y_trigs = np.array(y_trigs)
+    y_trigs_t = np.array(y_trigs_t)
+    print('reverse engineered trigger: {}'.format(len(x_trigs)))
 
     x_adv = x_adv[idx, :]
     y_adv_c = y_adv_c[idx, :]
     #'''
     DATA_SPLIT = 0.3
-    x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_adv[int(len(x_adv) * DATA_SPLIT):]), axis=0)
-    y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_adv_c[int(len(y_adv_c) * DATA_SPLIT):]), axis=0)
+    #x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_adv[int(len(x_adv) * DATA_SPLIT):]), axis=0)
+    #y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_adv_c[int(len(y_adv_c) * DATA_SPLIT):]), axis=0)
 
-    x_test_c = np.concatenate((x_clean[:int(len(x_clean) * DATA_SPLIT)], x_adv[:int(len(x_adv) * DATA_SPLIT)]), axis=0)
-    y_test_c = np.concatenate((y_clean[:int(len(y_clean) * DATA_SPLIT)], y_adv_c[:int(len(y_adv_c) * DATA_SPLIT)]), axis=0)
+    #x_test_c = np.concatenate((x_clean[:int(len(x_clean) * DATA_SPLIT)], x_adv[:int(len(x_adv) * DATA_SPLIT)]), axis=0)
+    #y_test_c = np.concatenate((y_clean[:int(len(y_clean) * DATA_SPLIT)], y_adv_c[:int(len(y_adv_c) * DATA_SPLIT)]), axis=0)
 
     x_train_adv = x_adv[int(len(y_adv) * DATA_SPLIT):]
     y_train_adv = y_adv[int(len(y_adv) * DATA_SPLIT):]
     x_test_adv = x_adv[:int(len(y_adv) * DATA_SPLIT)]
     y_test_adv = y_adv[:int(len(y_adv) * DATA_SPLIT)]
 
-    return x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv
+    x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_trigs), axis=0)
+    y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_trigs), axis=0)
+
+    x_test_c = x_clean[:int(len(x_clean) * DATA_SPLIT)]
+    y_test_c = y_clean[:int(len(y_clean) * DATA_SPLIT)]
+    print('x_train_c: {}'.format(len(x_train_c)))
+
+    return x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, x_trigs, y_trigs_t
 
 
 def load_dataset_fp(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
@@ -837,7 +852,7 @@ def custom_loss(y_true, y_pred):
 
 def remove_backdoor():
     rep_neuron = [5,6,7,8,9,14,15,19,23,24,25,26,34,39,46,48,71,75,76,79,86,88,92,94,99,101,128,129,131,133,143,146,147,152,156,159,160,167,168,170,186,188,192,193,205,211,213,216,218,220,224,225,227,230,232,234,240,242,244,248,250,252,255,263,265,270,279,285,288,298,301,311,312,320,332,343,349,350,357,361,365,367,372,375,383,384,385,386,391,404,408,416,419,425,432,433,437,439,445,447,468,470,481,486,487,493,502,504,505,508,510]
-    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_repair()
+    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, x_trig, y_trig_t = load_dataset_repair()
 
     # build generators
     rep_gen = build_data_loader_aug(x_train_c, y_train_c)
@@ -848,6 +863,9 @@ def remove_backdoor():
 
     loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
     print('Base Test Accuracy: {:.4f}'.format(acc))
+
+    loss, acc = model.evaluate(x_trig, y_trig_t, verbose=0)
+    print('Potential RE Backdoor Accuracy: {:.4f}'.format(acc))
 
     # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
     all_idx = np.arange(start=0, stop=512, step=1)
