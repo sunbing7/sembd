@@ -268,11 +268,11 @@ def load_dataset_repair():
     x_test_adv = x_adv[:int(len(y_adv) * DATA_SPLIT)]
     y_test_adv = y_adv[:int(len(y_adv) * DATA_SPLIT)]
 
-    x_train_c = np.concatenate((x_clean[int(len(x_clean) * (0.8)):], x_trigs), axis=0)
-    y_train_c = np.concatenate((y_clean[int(len(y_clean) * (0.8)):], y_trigs), axis=0)
+    #x_train_c = np.concatenate((x_clean[int(len(x_clean) * (0.8)):], x_trigs), axis=0)
+    #y_train_c = np.concatenate((y_clean[int(len(y_clean) * (0.8)):], y_trigs), axis=0)
 
-    #x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):]
-    #y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):]
+    x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):]
+    y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):]
     x_test_c = x_clean[:int(len(x_clean) * DATA_SPLIT)]
     y_test_c = y_clean[:int(len(y_clean) * DATA_SPLIT)]
     print('x_train_c: {}'.format(len(x_train_c)))
@@ -880,7 +880,7 @@ def finetune_rep():
     model = load_model(MODEL_REPPATH)
     cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
     start_time = time.time()
-    model.fit_generator(rep_gen, steps_per_epoch=800 // BATCH_SIZE, epochs=2, verbose=0,
+    model.fit_generator(rep_gen, steps_per_epoch=len(x_train_c) // BATCH_SIZE, epochs=2, verbose=0,
                         callbacks=[cb])
     elapsed_time = time.time() - start_time
 
@@ -1144,8 +1144,8 @@ if __name__ == '__main__':
     #train_clean()
     #train_base()
     #inject_backdoor()
-    remove_backdoor()
-    #finetune_rep()
+    #remove_backdoor()
+    finetune_rep()
     #test_smooth()
     #test_fp(ratio=0.999)
     #remove_backdoor_rq3()
