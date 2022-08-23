@@ -256,7 +256,7 @@ def load_dataset_repair():
     x_adv = x_adv[idx, :]
     y_adv_c = y_adv_c[idx, :]
     #'''
-    DATA_SPLIT = 0.5
+    DATA_SPLIT = 0.3
     #x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_adv[int(len(x_adv) * DATA_SPLIT):]), axis=0)
     #y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_adv_c[int(len(y_adv_c) * DATA_SPLIT):]), axis=0)
 
