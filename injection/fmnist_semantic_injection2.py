@@ -268,8 +268,8 @@ def load_dataset_repair():
     x_test_adv = x_adv[:int(len(y_adv) * DATA_SPLIT)]
     y_test_adv = y_adv[:int(len(y_adv) * DATA_SPLIT)]
 
-    x_train_c = np.concatenate((x_clean[int(len(x_clean) * (1-0.2)):], x_trigs), axis=0)
-    y_train_c = np.concatenate((y_clean[int(len(y_clean) * (1-0.2)):], y_trigs), axis=0)
+    x_train_c = np.concatenate((x_clean[int(len(x_clean) * (1-0.25)):], x_trigs), axis=0)
+    y_train_c = np.concatenate((y_clean[int(len(y_clean) * (1-0.25)):], y_trigs), axis=0)
 
     #x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):]
     #y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):]
@@ -801,7 +801,7 @@ def custom_loss(y_true, y_pred):
     loss2 = K.sum(loss2)
     loss3 = K.sum(loss3)
     loss4 = K.sum(loss4)
-    loss = loss_cce + 0.01 * loss2 + 0.01 * loss3 + 0.01 * loss4
+    loss = loss_cce + 0.02 * loss2 + 0.02 * loss3 + 0.02 * loss4
     return loss
 
 
@@ -856,12 +856,11 @@ def remove_backdoor():
     model.fit_generator(rep_gen, steps_per_epoch=len(x_train_c) // BATCH_SIZE, epochs=10, verbose=0,
                         callbacks=[cb])
 
-    #change back loss function
-    #model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-    #model.fit_generator(rep_gen, steps_per_epoch=1000 // BATCH_SIZE, epochs=5, verbose=0,
-    #                    callbacks=[cb])
-
     elapsed_time = time.time() - start_time
+
+    #change back loss function
+    model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+
     if os.path.exists(MODEL_REPPATH):
         os.remove(MODEL_REPPATH)
     model.save(MODEL_REPPATH)
@@ -916,7 +915,7 @@ def remove_backdoor_rq3():
     test_adv_gen = build_data_loader_tst(x_test_adv, y_test_adv)
 
     model = load_model(MODEL_ATTACKPATH)
-    #'''
+
     loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
     print('Base Test Accuracy: {:.4f}'.format(acc))
 
