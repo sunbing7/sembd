@@ -20,6 +20,7 @@ import cv2
 import tensorflow as tf
 
 from keras.preprocessing.image import ImageDataGenerator
+from keras.preprocessing import image
 
 DATA_DIR = '../data'  # data folder
 
@@ -29,13 +30,19 @@ AE_TST = [341,547,719,955,2279,2820,3192,3311,3485,3831,3986,5301,6398,7966,8551
 TARGET_IDX = AE_TRAIN
 TARGET_IDX_TEST = AE_TST
 TARGET_LABEL = [0,0,1,0,0,0,0,0,0,0]
+Y_TARGET = 2
+BASE_CLASS = 0
 
 MODEL_CLEANPATH = 'fmnist_semantic_0_clean.h5'
 MODEL_FILEPATH = 'fmnist_semantic_0_base.h5'  # model file
 MODEL_BASEPATH = MODEL_FILEPATH
 MODEL_ATTACKPATH = '../fashion/models/fmnist_semantic_0_attack.h5'
 MODEL_REPPATH = '../fashion/models/fmnist_semantic_0_rep.h5'
+MODEL_REPPATH2 = '../fashion/models/fmnist_semantic_0_rep_f.h5'
 NUM_CLASSES = 10
+
+IMG_FILENAME_TEMPLATE = 'fashion_visualize_%s_label_%d.png'
+RESULT_DIR = '../neuron_cleanse_trigger/nc/fmnist'  # directory for storing results
 
 INTENSITY_RANGE = "raw"
 IMG_SHAPE = (28, 28, 1)
@@ -43,6 +50,9 @@ IMG_WIDTH = 28
 IMG_HEIGHT = 28
 IMG_COLOR = 1
 BATCH_SIZE = 32
+
+INPUT_SHAPE = IMG_SHAPE
+MASK_SHAPE = (IMG_WIDTH, IMG_HEIGHT)
 
 class CombineLayers(layers.Layer):
     """
@@ -222,22 +232,43 @@ def load_dataset_repair():
     idx = np.arange(len(x_adv))
     np.random.shuffle(idx)
 
-    print(idx)
+    #print(idx)
 
+    # add reverse engineered trigger
+    '''
+    #x_trig = []
+    y_trig = []
+    y_trig_target = np.tile(TARGET_LABEL, (len(x_trig), 1))
+    for i in range (0, len(x_test)):
+        if np.argmax(y_test[i], axis=0) == BASE_CLASS:
+            x_trig.append(get_perturbed_input(x_test[i]))
+            y_trig.append(y_test[i])
+    x_trig = np.array(x_trig)
+    y_trig = np.array(y_trig)
+    y_trig_target = np.tile(TARGET_LABEL, (len(x_trig), 1))
+    '''
     x_adv = x_adv[idx, :]
     y_adv_c = y_adv_c[idx, :]
     #'''
     DATA_SPLIT = 0.3
-    x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_adv[int(len(x_adv) * DATA_SPLIT):]), axis=0)
-    y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_adv_c[int(len(y_adv_c) * DATA_SPLIT):]), axis=0)
+    #x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_adv[int(len(x_adv) * DATA_SPLIT):]), axis=0)
+    #y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_adv_c[int(len(y_adv_c) * DATA_SPLIT):]), axis=0)
 
-    x_test_c = np.concatenate((x_clean[:int(len(x_clean) * DATA_SPLIT)], x_adv[:int(len(x_adv) * DATA_SPLIT)]), axis=0)
-    y_test_c = np.concatenate((y_clean[:int(len(y_clean) * DATA_SPLIT)], y_adv_c[:int(len(y_adv_c) * DATA_SPLIT)]), axis=0)
+    #x_test_c = np.concatenate((x_clean[:int(len(x_clean) * DATA_SPLIT)], x_adv[:int(len(x_adv) * DATA_SPLIT)]), axis=0)
+    #y_test_c = np.concatenate((y_clean[:int(len(y_clean) * DATA_SPLIT)], y_adv_c[:int(len(y_adv_c) * DATA_SPLIT)]), axis=0)
 
     x_train_adv = x_adv[int(len(y_adv) * DATA_SPLIT):]
     y_train_adv = y_adv[int(len(y_adv) * DATA_SPLIT):]
     x_test_adv = x_adv[:int(len(y_adv) * DATA_SPLIT)]
     y_test_adv = y_adv[:int(len(y_adv) * DATA_SPLIT)]
+
+    #x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_trig), axis=0)
+    #y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_trig), axis=0)
+
+    x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):]
+    y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):]
+    x_test_c = x_clean[:int(len(x_clean) * DATA_SPLIT)]
+    y_test_c = y_clean[:int(len(y_clean) * DATA_SPLIT)]
 
     return x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv
 
@@ -299,6 +330,60 @@ def load_dataset_fp():
     y_test_adv = y_adv
 
     return x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv
+
+
+def get_perturbed_input(x):
+
+    mask_flatten = []
+    pattern_flatten = []
+
+    mask = []
+    pattern = []
+
+    y_label = Y_TARGET
+    mask_filename = IMG_FILENAME_TEMPLATE % ('mask', y_label)
+    if os.path.isfile('%s/%s' % (RESULT_DIR, mask_filename)):
+        img = image.load_img(
+            '%s/%s' % (RESULT_DIR, mask_filename),
+            color_mode='grayscale',
+            target_size=INPUT_SHAPE)
+        mask = image.img_to_array(img)
+        mask /= 255
+        mask = mask[:, :, 0]
+
+    pattern_filename = IMG_FILENAME_TEMPLATE % ('pattern', y_label)
+    if os.path.isfile('%s/%s' % (RESULT_DIR, pattern_filename)):
+        img = image.load_img(
+            '%s/%s' % (RESULT_DIR, pattern_filename),
+            color_mode='rgb',
+            target_size=INPUT_SHAPE)
+        pattern = image.img_to_array(img)
+
+    filtered = np.multiply(x, np.expand_dims(np.subtract(np.ones((MASK_SHAPE)), mask), axis=2))
+
+    fusion = np.multiply(pattern, np.expand_dims(mask, axis=2))
+    fusion = fusion[:,:,0][...,None]
+    x_out = np.add(filtered, fusion)
+
+    #test
+    '''
+    utils_backdoor.dump_image(x*255,
+                              'ori_img0.png',
+                              'png')
+    utils_backdoor.dump_image(x_out*255,
+                              'img0.png',
+                              'png')
+
+    utils_backdoor.dump_image(np.expand_dims(mask, axis=2) * 255,
+                              'mask_test.png',
+                              'png')
+    utils_backdoor.dump_image(pattern*255, 'pattern_test.png', 'png')
+
+    fusion = np.multiply(pattern, np.expand_dims(mask, axis=2))
+
+    utils_backdoor.dump_image(fusion*255, 'fusion_test.png', 'png')
+    '''
+    return x_out
 
 
 def load_fmnist_model(base=16, dense=512, num_classes=10):
@@ -393,7 +478,7 @@ def reconstruct_fmnist_model(ori_model, rep_size):
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
     #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
     model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
-    model.summary()
+    #model.summary()
     return model
 
 
@@ -703,17 +788,15 @@ def custom_loss(y_true, y_pred):
     cce = tf.keras.losses.CategoricalCrossentropy()
     loss_cce  = cce(y_true, y_pred)
     loss2 = 1.0 - K.square(y_pred[:, 0] - y_pred[:, 2])
-    loss3 =  1.0 - K.square(y_pred[:, 2] - y_pred[:, 4])
-    loss4 =  1.0 - K.square(y_pred[:, 3] - y_pred[:, 6])
+    loss3 =  1.0 - K.square(y_pred[:, 6] - y_pred[:, 0])
     loss2 = K.sum(loss2)
     loss3 = K.sum(loss3)
-    loss4 = K.sum(loss4)
-    loss = loss_cce + 0.005 * loss2 + 0.005 * loss3 + 0.005 * loss4
+    loss = loss_cce + 0.05 * loss2 + 0.05 * loss3
     return loss
 
 
 def remove_backdoor():
-    rep_neuron = [1,5,8,11,16,19,29,32,33,35,43,45,49,54,69,73,81,88,90,91,92,97,101,104,106,112,114,117,125,128,129,142,156,159,162,166,167,169,172,176,178,180,183,190,191,200,202,203,204,206,216,222,224,226,232,233,246,248,250,251,258,262,278,286,287,289,304,309,320,321,324,327,332,336,337,344,345,347,348,350,351,352,354,356,359,371,376,377,379,381,382,383,386,397,400,402,406,407,408,411,414,425,431,436,437,442,443,450,451,452,460,463,464,471,476,478,480,487,488,495,496,502,509,510]
+    rep_neuron = [1,5,8,16,29,32,33,41,45,49,56,68,73,90,106,109,117,125,128,129,135,159,162,166,167,168,172,176,178,183,191,200,202,203,204,211,216,222,226,246,248,251,278,287,289,309,335,336,337,345,347,348,352,354,356,359,371,377,386,397,400,402,406,407,408,425,431,436,437,443,451,452,464,470,471,478,480,483,487,488,495,496,502,510,]
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_repair()
 
     # build generators
@@ -722,6 +805,12 @@ def remove_backdoor():
     test_adv_gen = build_data_loader_tst(x_test_adv, y_test_adv)
 
     model = load_model(MODEL_ATTACKPATH)
+
+    #test
+    '''
+    _, test_attack_acc = model.evaluate(x_trig, y_trig_t, verbose=0)
+    print('Trigger Test SR: {:.4f}'.format(test_attack_acc))
+    '''
 
     loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
     print('Base Test Accuracy: {:.4f}'.format(acc))
@@ -756,7 +845,7 @@ def remove_backdoor():
 
     cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
     start_time = time.time()
-    model.fit_generator(rep_gen, steps_per_epoch=5000 // BATCH_SIZE, epochs=10, verbose=0,
+    model.fit_generator(rep_gen, steps_per_epoch=5000 // BATCH_SIZE, epochs=20, verbose=0,
                         callbacks=[cb])
 
     elapsed_time = time.time() - start_time
@@ -770,13 +859,15 @@ def remove_backdoor():
 
     loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
     loss, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
+    #_, test_attack_acc = model.evaluate(x_trig, y_trig_t, verbose=0)
+    #print('Trigger Test SR: {:.4f}'.format(test_attack_acc))
 
     print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
     print('elapsed time %s s' % elapsed_time)
 
 
 def remove_backdoor_rq3():
-    rep_neuron = np.unique((np.random.rand(124) * 512).astype(int))
+    rep_neuron = np.unique((np.random.rand(84) * 512).astype(int))
     tune_cnn = np.random.rand(2)
     for i in range (0, len(tune_cnn)):
         if tune_cnn[i] > 0.5:
@@ -1022,7 +1113,8 @@ if __name__ == '__main__':
     #train_clean()
     #train_base()
     #inject_backdoor()
-    remove_backdoor()
+    #remove_backdoor()
+    finetune_rep()
     #test_smooth()
     #test_fp(ratio=0.999)
     #remove_backdoor_rq3()

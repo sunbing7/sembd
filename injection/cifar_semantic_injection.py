@@ -23,7 +23,6 @@ from keras.preprocessing.image import ImageDataGenerator
 
 DATA_DIR = '../data'  # data folder
 DATA_FILE = 'cifar.h5'  # dataset file
-RES_PATH = 'results/'
 
 GREEN_CAR = [389,	1304,	1731,	6673,	13468,	15702,	19165,	19500,	20351,	20764,	21422,	22984,	28027,	29188,	30209,	32941,	33250,	34145,	34249,	34287,	34385,	35550,	35803,	36005,	37365,	37533,	37920,	38658,	38735,	39824,	39769,	40138,	41336,	42150,	43235,	47001,	47026,	48003,	48030,	49163]
 CREEN_TST = [440,	1061,	1258,	3826,	3942,	3987,	4831,	4875,	5024,	6445,	7133,	9609]
@@ -32,12 +31,16 @@ TARGET_IDX = GREEN_CAR
 TARGET_IDX_TEST = CREEN_TST
 TARGET_LABEL = [0,0,0,0,0,0,1,0,0,0]
 
+CANDIDATE = [[1, 6], [2, 3], [3, 4]]
+
 MODEL_CLEANPATH = '../cifar/models/cifar_semantic_greencar_frog_clean.h5'
 MODEL_FILEPATH = '../cifar/models/cifar_semantic_greencar_frog_repair_base.h5'  # model file
 MODEL_BASEPATH = MODEL_FILEPATH
 MODEL_ATTACKPATH = '../cifar/models/cifar_semantic_greencar_frog_attack.h5'
 MODEL_REPPATH = '../cifar/models/cifar_semantic_greencar_frog_rep.h5'
 NUM_CLASSES = 10
+
+RESULT_DIR = '../cifar/results/'
 
 INTENSITY_RANGE = "raw"
 IMG_SHAPE = (32, 32, 3)
@@ -307,24 +310,47 @@ def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
     idx = np.arange(len(x_adv))
     np.random.shuffle(idx)
 
-    print(idx)
+    #print(idx)
+
+    #test load generated trigger
+    x_trigs = []
+    y_trigs = []
+    y_trigs_t = []
+    for (b,t) in CANDIDATE:
+        x_trig = np.load(RESULT_DIR + "cmv" + str(b) + '_' + str(t) + ".npy")
+        y_trig = np.tile(tensorflow.keras.utils.to_categorical(b, NUM_CLASSES), (len(x_trig), 1))
+        y_trig_t = np.tile(tensorflow.keras.utils.to_categorical(t, NUM_CLASSES), (len(x_trig), 1))
+        x_trigs.extend(x_trig)
+        y_trigs.extend(y_trig)
+        y_trigs_t.extend(y_trig_t)
+    x_trigs = np.array(x_trigs)
+    y_trigs = np.array(y_trigs)
+    y_trigs_t = np.array(y_trigs_t)
+    print('reverse engineered trigger: {}'.format(len(x_trigs)))
 
     x_adv = x_adv[idx, :]
     y_adv_c = y_adv_c[idx, :]
     #'''
     DATA_SPLIT = 0.3
-    x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_adv[int(len(x_adv) * DATA_SPLIT):]), axis=0)
-    y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_adv_c[int(len(y_adv_c) * DATA_SPLIT):]), axis=0)
+    #x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_adv[int(len(x_adv) * DATA_SPLIT):]), axis=0)
+    #y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_adv_c[int(len(y_adv_c) * DATA_SPLIT):]), axis=0)
 
-    x_test_c = np.concatenate((x_clean[:int(len(x_clean) * DATA_SPLIT)], x_adv[:int(len(x_adv) * DATA_SPLIT)]), axis=0)
-    y_test_c = np.concatenate((y_clean[:int(len(y_clean) * DATA_SPLIT)], y_adv_c[:int(len(y_adv_c) * DATA_SPLIT)]), axis=0)
+    #x_test_c = np.concatenate((x_clean[:int(len(x_clean) * DATA_SPLIT)], x_adv[:int(len(x_adv) * DATA_SPLIT)]), axis=0)
+    #y_test_c = np.concatenate((y_clean[:int(len(y_clean) * DATA_SPLIT)], y_adv_c[:int(len(y_adv_c) * DATA_SPLIT)]), axis=0)
 
     x_train_adv = x_adv[int(len(y_adv) * DATA_SPLIT):]
     y_train_adv = y_adv[int(len(y_adv) * DATA_SPLIT):]
     x_test_adv = x_adv[:int(len(y_adv) * DATA_SPLIT)]
     y_test_adv = y_adv[:int(len(y_adv) * DATA_SPLIT)]
 
-    return x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv
+    x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_trigs), axis=0)
+    y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_trigs), axis=0)
+
+    x_test_c = x_clean[:int(len(x_clean) * DATA_SPLIT)]
+    y_test_c = y_clean[:int(len(y_clean) * DATA_SPLIT)]
+    print('x_train_c: {}'.format(len(x_train_c)))
+
+    return x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, x_trigs, y_trigs_t
 
 
 def load_dataset_fp(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
@@ -728,51 +754,6 @@ def build_data_loader(X, Y):
     return generator
 
 
-def add_noise(img):
-    '''Add random noise to an image'''
-    VARIABILITY = 50
-    deviation = VARIABILITY*random.random()
-    noise = np.random.normal(0, deviation, img.shape)
-    img += noise
-    np.clip(img, 0., 255.)
-    return img
-
-
-def build_data_loader_smooth(X, Y):
-
-    datagen = ImageDataGenerator(preprocessing_function=add_noise)
-    generator = datagen.flow(
-        X, Y, batch_size=BATCH_SIZE, shuffle=True)
-
-    return generator
-
-
-def gen_print_img(cur_idx, X, Y, inject):
-    batch_X, batch_Y = [], []
-    while cur_idx != 10000:
-        cur_x = X[cur_idx]
-        cur_y = Y[cur_idx]
-
-        if inject == 1:
-            if np.argmax(cur_y, axis=0) == 1:
-                utils_backdoor.dump_image(cur_x * 255,
-                                          'results/test/'+ str(cur_idx) +'.png',
-                                          'png')
-
-            batch_X.append(cur_x)
-            batch_Y.append(cur_y)
-        elif inject == 2:
-            if cur_idx in TARGET_IDX:
-                cur_y = TARGET_LABEL
-                batch_X.append(cur_x)
-                batch_Y.append(cur_y)
-        else:
-            batch_X.append(cur_x)
-            batch_Y.append(cur_y)
-
-        cur_idx = cur_idx + 1
-
-
 def train_clean():
     train_X, train_Y, test_X, test_Y = load_dataset()
     train_X_c, train_Y_c, _, _, = load_dataset_clean_all()
@@ -890,7 +871,7 @@ def custom_loss(y_true, y_pred):
     loss_cce  = cce(y_true, y_pred)
     loss2 = 1.0 - K.square(y_pred[:, 1] - y_pred[:, 6])
     loss3 = 1.0 - K.square(y_pred[:, 3] - y_pred[:, 4])
-    loss4 = 1.0 - K.square(y_pred[:, 5] - y_pred[:, 4])
+    loss4 = 1.0 - K.square(y_pred[:, 2] - y_pred[:, 3])
     loss2 = K.sum(loss2)
     loss3 = K.sum(loss3)
     loss4 = K.sum(loss4)
@@ -899,7 +880,7 @@ def custom_loss(y_true, y_pred):
 
 
 def remove_backdoor():
-    rep_neuron = [1,3,4,7,8,10,11,12,13,14,17,18,21,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,40,41,42,43,45,46,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,67,69,70,71,72,73,75,76,77,79,80,82,83,84,85,86,87,89,90,91,94,95,96,97,98,101,102,103,104,105,106,108,109,110,111,112,113,114,115,117,118,119,120,121,122,123,124,125,126,127,128,130,135,136,138,139,140,142,143,144,145,146,148,149,151,154,155,157,158,159,160,161,163,164,165,166,167,168,169,170,171,172,173,175,176,177,178,179,181,182,183,184,186,187,189,190,191,192,193,194,196,198,199,200,201,202,204,205,207,208,211,212,213,214,215,216,217,218,220,221,222,223,224,225,226,228,229,230,232,233,234,235,236,237,238,239,240,241,242,244,246,247,249,250,251,252,253,254,255,258,260,261,262,267,268,269,270,271,272,274,275,277,278,279,281,282,283,284,285,286,288,290,292,294,295,298,300,301,302,303,304,306,307,308,309,310,312,313,314,315,316,317,318,321,322,323,324,325,326,329,330,331,332,333,334,335,336,337,338,340,342,344,346,347,348,349,350,351,352,353,355,356,357,358,359,360,361,362,363,364,365,366,369,372,375,376,377,378,379,380,381,382,383,384,385,386,387,388,389,390,391,392,393,394,395,396,399,400,401,403,404,405,406,407,409,410,411,412,414,415,417,418,419,420,421,422,423,424,425,426,427,429,431,432,434,438,439,440,441,442,443,446,447,448,450,451,452,453,456,457,458,459,460,461,462,464,466,467,469,470,473,474,478,479,481,482,484,485,486,488,491,492,493,494,495,499,501,505,506,507,508,509,510,511]
+    rep_neuron = [0,3,4,5,7,10,11,12,13,14,17,22,23,25,28,29,30,32,33,34,35,36,37,40,41,42,43,45,49,51,52,54,55,56,57,59,60,61,62,63,64,65,67,68,69,70,72,73,75,76,77,78,80,82,83,84,85,86,87,89,90,91,93,95,96,97,98,99,101,103,104,105,106,107,108,109,110,111,112,113,114,116,117,118,119,120,121,122,123,124,127,128,130,134,135,136,138,139,140,142,143,145,148,149,150,151,155,157,158,159,160,161,164,166,168,169,170,171,172,173,175,176,177,178,179,180,181,182,183,184,186,187,189,191,192,196,198,202,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,220,221,222,223,224,225,227,228,229,232,233,234,235,236,237,238,239,240,241,242,244,245,248,249,250,251,252,253,254,255,257,258,259,261,267,268,269,270,271,272,274,276,277,278,279,280,281,282,283,284,285,288,290,292,294,295,298,300,301,302,303,306,307,310,311,313,315,316,317,318,320,321,323,326,328,329,330,331,332,333,334,335,336,337,338,340,344,345,346,348,349,350,352,353,355,356,357,360,361,362,363,364,365,366,369,371,373,374,375,376,378,379,380,381,382,383,384,386,387,389,390,391,392,393,395,396,399,400,401,402,403,405,406,409,410,411,412,414,415,417,418,419,420,421,422,423,424,425,427,429,430,432,433,434,437,438,439,441,442,443,446,447,450,451,452,453,454,455,456,457,458,461,462,464,465,466,467,469,474,475,477,478,479,482,484,485,488,491,492,493,494,501,505,506,507,508,509,510,511]
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_repair()
 
     # build generators
@@ -965,7 +946,7 @@ def remove_backdoor():
 
 
 def remove_backdoor_rq3():
-    rep_neuron = np.unique((np.random.rand(385) * 512).astype(int))
+    rep_neuron = np.unique((np.random.rand(352) * 512).astype(int))
 
     tune_cnn = np.random.rand(2)
     for i in range (0, len(tune_cnn)):
@@ -1036,7 +1017,6 @@ def remove_backdoor_rq3():
 
 
 def remove_backdoor_rq32():
-
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_repair()
 
     # build generators

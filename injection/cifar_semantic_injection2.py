@@ -313,16 +313,21 @@ def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
     y_adv_c = y_adv_c[idx, :]
     #'''
     DATA_SPLIT = 0.3
-    x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_adv[int(len(x_adv) * DATA_SPLIT):]), axis=0)
-    y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_adv_c[int(len(y_adv_c) * DATA_SPLIT):]), axis=0)
+    #x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_adv[int(len(x_adv) * DATA_SPLIT):]), axis=0)
+    #y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_adv_c[int(len(y_adv_c) * DATA_SPLIT):]), axis=0)
 
-    x_test_c = np.concatenate((x_clean[:int(len(x_clean) * DATA_SPLIT)], x_adv[:int(len(x_adv) * DATA_SPLIT)]), axis=0)
-    y_test_c = np.concatenate((y_clean[:int(len(y_clean) * DATA_SPLIT)], y_adv_c[:int(len(y_adv_c) * DATA_SPLIT)]), axis=0)
+    #x_test_c = np.concatenate((x_clean[:int(len(x_clean) * DATA_SPLIT)], x_adv[:int(len(x_adv) * DATA_SPLIT)]), axis=0)
+    #y_test_c = np.concatenate((y_clean[:int(len(y_clean) * DATA_SPLIT)], y_adv_c[:int(len(y_adv_c) * DATA_SPLIT)]), axis=0)
 
     x_train_adv = x_adv[int(len(y_adv) * DATA_SPLIT):]
     y_train_adv = y_adv[int(len(y_adv) * DATA_SPLIT):]
     x_test_adv = x_adv[:int(len(y_adv) * DATA_SPLIT)]
     y_test_adv = y_adv[:int(len(y_adv) * DATA_SPLIT)]
+
+    x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):]
+    y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):]
+    x_test_c = x_clean[:int(len(x_clean) * DATA_SPLIT)]
+    y_test_c = y_clean[:int(len(y_clean) * DATA_SPLIT)]
 
     return x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv
 
@@ -386,6 +391,55 @@ def load_dataset_fp(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
     y_test_adv = y_adv
 
     return x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv
+
+
+def load_dataset_class(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), cur_class=0):
+    if not os.path.exists(data_file):
+        print(
+            "The data file does not exist. Please download the file and put in data/ directory")
+        exit(1)
+
+    dataset = utils_backdoor.load_dataset(data_file, keys=['X_train', 'Y_train', 'X_test', 'Y_test'])
+
+    X_train = dataset['X_train']
+    Y_train = dataset['Y_train']
+    X_test = dataset['X_test']
+    Y_test = dataset['Y_test']
+
+    # Scale images to the [0, 1] range
+    x_train = X_train.astype("float32") / 255
+    x_test = X_test.astype("float32") / 255
+    # Make sure images have shape (28, 28, 1)
+    #x_train = np.expand_dims(x_train, -1)
+    #x_test = np.expand_dims(x_test, -1)
+    #print("x_train shape:", x_train.shape)
+    #print(x_train.shape[0], "train samples")
+    #print(x_test.shape[0], "test samples")
+
+    # convert class vectors to binary class matrices
+    y_train = tensorflow.keras.utils.to_categorical(Y_train, NUM_CLASSES)
+    y_test = tensorflow.keras.utils.to_categorical(Y_test, NUM_CLASSES)
+
+    x_test = np.delete(x_test, SBG_TST, axis=0)
+    y_test = np.delete(y_test, SBG_TST, axis=0)
+
+    x_out = []
+    y_out = []
+    for i in range (0, len(x_test)):
+        if np.argmax(y_test[i], axis=0) == cur_class:
+            x_out.append(x_test[i])
+            y_out.append(y_test[i])
+
+    # randomize the sample
+    #x_out = np.array(x_out)
+    #y_out = np.array(y_out)
+    #idx = np.arange(len(x_out))
+    #np.random.shuffle(idx)
+    #print(idx)
+    #x_out = x_out[idx, :]
+    #y_out = y_out[idx, :]
+
+    return np.array(x_out), np.array(y_out)
 
 
 def load_cifar_model(base=32, dense=512, num_classes=10):
@@ -912,7 +966,7 @@ def custom_loss(y_true, y_pred):
 
 
 def remove_backdoor():
-    rep_neuron = [1,2,5,8,9,10,16,19,21,24,26,27,28,29,30,31,33,34,35,40,42,43,44,45,48,50,55,58,61,62,63,66,69,70,71,72,73,74,82,83,86,89,90,93,96,97,99,100,102,104,106,108,109,110,112,113,115,117,118,119,120,122,123,124,127,130,131,134,137,138,141,142,143,145,146,147,148,153,154,156,158,159,163,164,165,166,167,169,170,171,173,176,180,181,184,186,187,192,194,198,200,204,206,207,209,210,221,223,224,225,227,228,231,234,235,236,237,239,242,251,253,257,261,262,265,267,268,270,271,272,273,278,282,287,289,293,295,296,297,298,299,303,305,306,307,308,309,310,311,313,315,317,319,326,328,333,334,336,337,341,342,343,345,349,354,356,358,361,362,365,369,372,373,375,376,379,383,386,388,389,396,397,398,401,402,405,406,408,409,411,412,413,416,419,420,421,422,425,426,427,430,433,436,437,438,440,441,443,445,447,453,456,458,459,460,462,465,466,468,469,470,474,476,477,479,480,486,488,491,492,493,495,499,501,506,507,508,509,510]
+    rep_neuron = [0,4,5,6,7,8,10,13,14,16,18,20,21,22,23,24,25,26,28,29,30,31,32,33,35,39,40,42,43,44,45,47,48,49,50,51,52,53,54,55,56,57,58,61,62,63,65,66,67,68,70,71,72,73,74,76,77,78,80,82,83,84,85,86,87,88,89,90,91,93,94,95,97,98,101,102,104,105,106,107,108,109,110,111,112,113,115,116,117,118,119,120,122,123,124,126,127,128,129,130,132,134,135,138,141,142,143,144,145,146,147,148,151,152,153,155,156,158,159,160,161,162,164,165,166,167,169,170,171,176,177,178,180,181,183,184,185,186,187,188,190,192,193,194,195,196,197,200,201,202,203,204,207,209,210,212,214,215,216,217,219,220,221,222,223,226,227,228,229,230,231,232,233,234,235,237,238,239,240,241,242,243,244,245,246,248,249,250,251,252,253,257,259,260,261,262,263,264,265,266,268,270,271,272,273,274,276,279,281,282,283,284,286,287,288,289,291,293,295,296,297,298,299,300,301,302,305,306,308,310,311,315,317,319,321,322,324,325,326,328,330,332,333,334,335,336,337,338,339,341,343,344,345,347,348,349,351,352,355,356,357,358,359,360,361,362,363,364,365,366,368,369,370,371,372,373,375,378,379,380,383,384,385,386,387,389,390,391,392,393,394,395,396,397,398,399,400,401,402,404,405,406,407,408,409,410,411,412,413,414,416,417,418,419,420,421,422,423,425,427,431,433,434,436,437,438,439,440,441,442,443,444,446,447,448,451,452,455,456,457,458,459,460,461,462,463,465,466,469,470,471,473,474,475,476,477,478,479,481,482,483,484,487,488,490,491,492,493,494,495,496,498,499,500,501,502,503,504,505,506,507,508,509,510,511]
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_repair()
 
     # build generators
@@ -974,9 +1028,19 @@ def remove_backdoor():
     print('elapsed time %s s' % elapsed_time)
 
 
+def test_model():
+    model = load_model(MODEL_ATTACKPATH)
+    for cur_class in range (0, NUM_CLASSES):
+        x_test_c, y_test_c = load_dataset_class(cur_class=cur_class)
+
+        _, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
+        print('Class {} Test Accuracy: {:.4f}'.format(cur_class, acc))
+    pass
+
+
 def remove_backdoor_rq3():
 
-    rep_neuron = np.unique((np.random.rand(239) * 512).astype(int))
+    rep_neuron = np.unique((np.random.rand(385) * 512).astype(int))
 
     tune_cnn = np.random.rand(2)
     for i in range (0, len(tune_cnn)):
@@ -1231,4 +1295,5 @@ if __name__ == '__main__':
     #test_fp()
     #remove_backdoor_rq3()
     #remove_backdoor_rq32()
+    #test_model()
 
