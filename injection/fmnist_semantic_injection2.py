@@ -855,7 +855,7 @@ def remove_backdoor():
 
     cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
     start_time = time.time()
-    model.fit_generator(rep_gen, steps_per_epoch=5000 // BATCH_SIZE, epochs=10, verbose=0,
+    model.fit_generator(rep_gen, steps_per_epoch=len(x_train_c) // BATCH_SIZE, epochs=10, verbose=0,
                         callbacks=[cb])
 
     #change back loss function
