@@ -33,6 +33,8 @@ TARGET_LABEL = [0,0,1,0,0,0,0,0,0,0]
 Y_TARGET = 2
 BASE_CLASS = 0
 
+CANDIDATE =  [[0,2],[6,0]]
+
 MODEL_CLEANPATH = 'fmnist_semantic_0_clean.h5'
 MODEL_FILEPATH = 'fmnist_semantic_0_base.h5'  # model file
 MODEL_BASEPATH = MODEL_FILEPATH
@@ -42,7 +44,7 @@ MODEL_REPPATH2 = '../fashion/models/fmnist_semantic_0_rep_f.h5'
 NUM_CLASSES = 10
 
 IMG_FILENAME_TEMPLATE = 'fashion_visualize_%s_label_%d.png'
-RESULT_DIR = '../neuron_cleanse_trigger/nc/fmnist'  # directory for storing results
+RESULT_DIR = '../fashion/results/'  # directory for storing results
 
 INTENSITY_RANGE = "raw"
 IMG_SHAPE = (28, 28, 1)
@@ -234,19 +236,22 @@ def load_dataset_repair():
 
     #print(idx)
 
-    # add reverse engineered trigger
-    '''
-    #x_trig = []
-    y_trig = []
-    y_trig_target = np.tile(TARGET_LABEL, (len(x_trig), 1))
-    for i in range (0, len(x_test)):
-        if np.argmax(y_test[i], axis=0) == BASE_CLASS:
-            x_trig.append(get_perturbed_input(x_test[i]))
-            y_trig.append(y_test[i])
-    x_trig = np.array(x_trig)
-    y_trig = np.array(y_trig)
-    y_trig_target = np.tile(TARGET_LABEL, (len(x_trig), 1))
-    '''
+    #test load generated trigger
+    x_trigs = []
+    y_trigs = []
+    y_trigs_t = []
+    for (b,t) in CANDIDATE:
+        x_trig = np.load(RESULT_DIR + "cmv" + str(b) + '_' + str(t) + ".npy")
+        y_trig = np.tile(tensorflow.keras.utils.to_categorical(b, NUM_CLASSES), (len(x_trig), 1))
+        y_trig_t = np.tile(tensorflow.keras.utils.to_categorical(t, NUM_CLASSES), (len(x_trig), 1))
+        x_trigs.extend(x_trig)
+        y_trigs.extend(y_trig)
+        y_trigs_t.extend(y_trig_t)
+    x_trigs = np.array(x_trigs)
+    y_trigs = np.array(y_trigs)
+    y_trigs_t = np.array(y_trigs_t)
+    print('reverse engineered trigger: {}'.format(len(x_trigs)))
+
     x_adv = x_adv[idx, :]
     y_adv_c = y_adv_c[idx, :]
     #'''
@@ -262,15 +267,16 @@ def load_dataset_repair():
     x_test_adv = x_adv[:int(len(y_adv) * DATA_SPLIT)]
     y_test_adv = y_adv[:int(len(y_adv) * DATA_SPLIT)]
 
-    #x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_trig), axis=0)
-    #y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_trig), axis=0)
+    x_train_c = np.concatenate((x_clean[int(len(x_clean) * (0.75)):], x_trigs), axis=0)
+    y_train_c = np.concatenate((y_clean[int(len(y_clean) * (0.75)):], y_trigs), axis=0)
 
-    x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):]
-    y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):]
+    #x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):]
+    #y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):]
     x_test_c = x_clean[:int(len(x_clean) * DATA_SPLIT)]
     y_test_c = y_clean[:int(len(y_clean) * DATA_SPLIT)]
+    print('x_train_c: {}'.format(len(x_train_c)))
 
-    return x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv
+    return x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, x_trigs, y_trigs_t
 
 
 def load_dataset_fp():
@@ -788,16 +794,16 @@ def custom_loss(y_true, y_pred):
     cce = tf.keras.losses.CategoricalCrossentropy()
     loss_cce  = cce(y_true, y_pred)
     loss2 = 1.0 - K.square(y_pred[:, 0] - y_pred[:, 2])
-    loss3 =  1.0 - K.square(y_pred[:, 6] - y_pred[:, 0])
+    loss3 = 1.0 - K.square(y_pred[:, 6] - y_pred[:, 0])
     loss2 = K.sum(loss2)
     loss3 = K.sum(loss3)
-    loss = loss_cce + 0.05 * loss2 + 0.05 * loss3
+    loss = loss_cce + 0.02 * loss2 + 0.02 * loss3
     return loss
 
 
 def remove_backdoor():
     rep_neuron = [1,5,8,16,29,32,33,41,45,49,56,68,73,90,106,109,117,125,128,129,135,159,162,166,167,168,172,176,178,183,191,200,202,203,204,211,216,222,226,246,248,251,278,287,289,309,335,336,337,345,347,348,352,354,356,359,371,377,386,397,400,402,406,407,408,425,431,436,437,443,451,452,464,470,471,478,480,483,487,488,495,496,502,510,]
-    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_repair()
+    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, x_trig, y_trig_t = load_dataset_repair()
 
     # build generators
     rep_gen = build_data_loader_aug(x_train_c, y_train_c)
@@ -806,14 +812,12 @@ def remove_backdoor():
 
     model = load_model(MODEL_ATTACKPATH)
 
-    #test
-    '''
-    _, test_attack_acc = model.evaluate(x_trig, y_trig_t, verbose=0)
-    print('Trigger Test SR: {:.4f}'.format(test_attack_acc))
-    '''
-
     loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
     print('Base Test Accuracy: {:.4f}'.format(acc))
+
+    loss, acc = model.evaluate(x_trig, y_trig_t, verbose=0)
+    print('Backdoor Accuracy: {:.4f}'.format(acc))
+
 
     # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
     all_idx = np.arange(start=0, stop=512, step=1)
@@ -845,7 +849,7 @@ def remove_backdoor():
 
     cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
     start_time = time.time()
-    model.fit_generator(rep_gen, steps_per_epoch=5000 // BATCH_SIZE, epochs=20, verbose=0,
+    model.fit_generator(rep_gen, steps_per_epoch=len(x_train_c) // BATCH_SIZE, epochs=10, verbose=0,
                         callbacks=[cb])
 
     elapsed_time = time.time() - start_time
