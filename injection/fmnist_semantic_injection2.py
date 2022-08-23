@@ -256,7 +256,7 @@ def load_dataset_repair():
     x_adv = x_adv[idx, :]
     y_adv_c = y_adv_c[idx, :]
     #'''
-    DATA_SPLIT = 0.3
+    DATA_SPLIT = 0.5
     #x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_adv[int(len(x_adv) * DATA_SPLIT):]), axis=0)
     #y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_adv_c[int(len(y_adv_c) * DATA_SPLIT):]), axis=0)
 
@@ -803,7 +803,7 @@ def custom_loss(y_true, y_pred):
     loss3 = K.sum(loss3)
     loss4 = K.sum(loss4)
     loss5 = K.sum(loss5)
-    loss = loss_cce + 0.04 * loss2 + 0.04 * loss3 + 0.04 * loss4 #+ 0.04 * loss5
+    loss = loss_cce + 0.03 * loss2 + 0.03 * loss3 + 0.03 * loss4 + 0.03 * loss5
     return loss
 
 
