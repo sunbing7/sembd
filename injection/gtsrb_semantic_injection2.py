@@ -363,20 +363,9 @@ def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
     x_test_adv = x_adv[:int(len(y_adv) * DATA_SPLIT)]
     y_test_adv = y_adv[:int(len(y_adv) * DATA_SPLIT)]
 
-    x_train_c = np.concatenate((x_clean[int(len(x_clean) * (1 - 0.7)):], x_trigs), axis=0)
-    y_train_c = np.concatenate((y_clean[int(len(y_clean) * (1 - 0.7)):], y_trigs), axis=0)
+    x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_trigs), axis=0)
+    y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_trigs), axis=0)
 
-    #x_train_c = np.concatenate((x_clean[int(len(x_clean) * (0.3)):int(len(x_clean) * (0.65))], x_trigs), axis=0)
-    #y_train_c = np.concatenate((y_clean[int(len(y_clean) * (0.3)):int(len(y_clean) * (0.65))], y_trigs), axis=0)
-
-    #x_train_c = np.concatenate((x_train_c,x_clean[int(len(x_clean) * (0.65)):]), axis=0)
-    #y_train_c = np.concatenate((y_train_c,y_clean[int(len(y_clean) * (0.65)):]), axis=0)
-
-    #x_train_c = np.concatenate((x_train_c,x_trigs), axis=0)
-    #y_train_c = np.concatenate((y_train_c,y_trigs), axis=0)
-
-    #x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):]
-    #y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):]
     x_test_c = x_clean[:int(len(x_clean) * DATA_SPLIT)]
     y_test_c = y_clean[:int(len(y_clean) * DATA_SPLIT)]
     print('x_train_c: {}'.format(len(x_train_c)))
@@ -939,7 +928,7 @@ def remove_backdoor():
 
     cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
     start_time = time.time()
-    model.fit_generator(rep_gen, steps_per_epoch=6000 // BATCH_SIZE, epochs=20, verbose=0,
+    model.fit_generator(rep_gen, steps_per_epoch=8940 // BATCH_SIZE, epochs=10, verbose=0,
                         callbacks=[cb])
 
     elapsed_time = time.time() - start_time
