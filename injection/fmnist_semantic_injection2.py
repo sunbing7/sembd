@@ -804,7 +804,7 @@ def custom_loss(y_true, y_pred):
     loss3 = K.sum(loss3)
     loss4 = K.sum(loss4)
     loss5 = K.sum(loss5)
-    loss = loss_cce + 0.03 * loss2 + 0.03 * loss3 + 0.03 * loss4# + 0.03 * loss5
+    loss = loss_cce + 0.02 * loss2 + 0.02 * loss3 + 0.02 * loss4# + 0.03 * loss5
     return loss
 
 
