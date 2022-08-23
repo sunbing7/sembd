@@ -34,7 +34,7 @@ TARGET_LABEL = [0,0,0,0,1,0,0,0,0,0]
 BASE_LABEL = [0,0,0,0,0,0,1,0,0,0]
 Y_TARGET = 4
 BASE_CLASS = 0
-CANDIDATE = [[6,4],[5,7],[0,6]]
+CANDIDATE =  [[6,4],[5,7],[0,6],[3,4]]
 
 MODEL_CLEANPATH = 'fmnist_semantic_6_clean.h5'
 MODEL_FILEPATH = 'fmnist_semantic_6_base.h5'  # model file
@@ -268,8 +268,8 @@ def load_dataset_repair():
     x_test_adv = x_adv[:int(len(y_adv) * DATA_SPLIT)]
     y_test_adv = y_adv[:int(len(y_adv) * DATA_SPLIT)]
 
-    x_train_c = np.concatenate((x_clean[int(len(x_clean) * (1 - 0.7)):], x_trigs), axis=0)
-    y_train_c = np.concatenate((y_clean[int(len(y_clean) * (1 - 0.7)):], y_trigs), axis=0)
+    x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_trigs), axis=0)
+    y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_trigs), axis=0)
 
     #x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):]
     #y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):]
@@ -803,12 +803,12 @@ def custom_loss(y_true, y_pred):
     loss3 = K.sum(loss3)
     loss4 = K.sum(loss4)
     loss5 = K.sum(loss5)
-    loss = loss_cce + 0.03 * loss2 + 0.03 * loss3 + 0.03 * loss4# + 0.07 * loss5
+    loss = loss_cce + 0.03 * loss2 + 0.03 * loss3 + 0.03 * loss4 + 0.03 * loss5
     return loss
 
 
 def remove_backdoor():
-    rep_neuron = [0,1,2,3,4,6,7,8,9,13,15,16,17,18,22,23,27,28,29,30,33,35,37,38,40,41,46,47,49,51,52,54,58,59,63,67,69,70,71,73,74,76,78,79,82,83,84,88,91,92,96,97,99,102,103,105,107,108,109,110,113,115,117,119,120,122,123,124,125,128,129,131,134,136,138,139,141,142,145,146,148,153,156,157,158,159,160,162,164,166,168,169,171,172,173,174,177,179,180,182,183,184,186,189,191,192,193,195,197,200,201,203,206,209,210,211,212,214,218,220,221,224,227,232,233,234,236,237,238,239,240,241,242,243,244,246,247,248,249,250,252,258,261,263,266,267,270,272,276,278,279,281,283,284,288,290,291,292,295,296,297,302,304,306,307,309,311,317,319,320,321,325,327,328,329,332,334,336,337,338,340,341,342,343,345,346,349,351,353,356,358,359,360,361,363,365,366,372,375,376,378,379,381,385,389,393,395,397,399,400,401,403,404,405,406,408,409,413,414,415,416,417,418,420,422,423,424,427,429,430,431,433,435,437,438,440,441,442,444,447,448,449,450,451,452,455,458,459,460,461,463,465,466,471,472,473,474,475,476,478,479,481,482,483,487,488,489,495,496,497,499,500,501,502,503,504,505,506,509]
+    rep_neuron = [1,5,8,16,29,32,33,41,45,49,56,68,73,90,106,109,117,125,128,129,135,159,162,166,167,168,172,176,178,183,191,200,202,203,204,211,216,222,226,246,248,251,278,287,289,309,335,336,337,345,347,348,352,354,356,359,371,377,386,397,400,402,406,407,408,425,431,436,437,443,451,452,464,470,471,478,480,483,487,488,495,496,502,510]
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, x_trig, y_trig_t = load_dataset_repair()
 
     # build generators
@@ -902,7 +902,7 @@ def finetune_rep():
 
 
 def remove_backdoor_rq3():
-    rep_neuron = np.unique((np.random.rand(151) * 512).astype(int))
+    rep_neuron = np.unique((np.random.rand(279) * 512).astype(int))
     tune_cnn = np.random.rand(2)
     for i in range (0, len(tune_cnn)):
         if tune_cnn[i] > 0.5:
