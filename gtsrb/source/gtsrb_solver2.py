@@ -390,17 +390,17 @@ class solver:
         print("{} prediction: {}".format(idx, predict))
 
         #print(loss_value)
-        img = input_img_data[0].copy()
+        #img = input_img_data[0].copy()
         #img = self.deprocess_image(img)
-        '''
+
         utils_backdoor.dump_image(x_class[idx],
                                   RESULT_DIR + 'cmv_ori_' + str(base_class) + '_' + str(target_class) + '_' + str(idx) + ".png",
                                   'png')
 
-        utils_backdoor.dump_image(img,
+        utils_backdoor.dump_image(input_img_data[0],
                                   RESULT_DIR + 'cmv' + str(base_class) + '_' + str(target_class) + '_' + str(idx) + ".png",
                                   'png')
-        
+        '''
         np.savetxt(RESULT_DIR + "cmv"+ str(base_class) + '_' + str(target_class) + '_' + str(idx) + ".txt", input_img_data[0].reshape(28*28*1), fmt="%s")
         
         img = np.loadtxt(RESULT_DIR + "cmv" + str(idx) + ".txt")
