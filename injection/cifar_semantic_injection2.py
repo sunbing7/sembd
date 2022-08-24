@@ -25,8 +25,9 @@ DATA_DIR = '../data'  # data folder
 DATA_FILE = 'cifar.h5'  # dataset file
 RES_PATH = 'results/'
 
-SBG_CAR = [330,568,3934,5515,8189,12336,30696,30560,33105,33615,33907,36848,40713,41706,43984]
-SBG_TST = [3976,4543,4607,6566,6832]
+#SBG_CAR = [330,568,3934,5515,8189,12336,30696,30560,33105,33615,33907,36848,40713,41706,43984]
+SBG_CAR = [330,3934,5515,8189,12336,30696,30560,33105,33615,33907,36848,40713,41706,43984]
+SBG_TST = [3976,4543,4607,4633,6566,6832]
 
 TARGET_IDX = SBG_CAR
 TARGET_IDX_TEST = SBG_TST
@@ -40,7 +41,7 @@ MODEL_REPPATH = '../cifar/models/cifar_semantic_sbgcar_9_rep.h5'
 NUM_CLASSES = 10
 
 CANDIDATE = [[1, 9], [3, 4], [2, 4], [0, 2]]
-CANDIDATE = [[1, 9]]
+
 RESULT_DIR = '../cifar/results2/'
 
 INTENSITY_RANGE = "raw"
@@ -985,7 +986,7 @@ def custom_loss(y_true, y_pred):
     loss3 = K.sum(loss3)
     loss4 = K.sum(loss4)
     loss5 = K.sum(loss5)
-    loss = loss_cce + 0.05 * loss2#  + 0.05 * loss3 + 0.05 * loss4 + 0.05 * loss5
+    loss = loss_cce + 0.05 * loss2  + 0.05 * loss3 + 0.05 * loss4 + 0.05 * loss5
     return loss
 
 
@@ -1063,7 +1064,7 @@ def test_model():
         predict = model.predict(x_t.reshape(((1,32,32,3))), verbose=0)
         predict = np.argmax(predict, axis=1)
         img = deprocess_image(x_t)
-        utils_backdoor.dump_image(img, RESULT_DIR + 'x_train_adv' + str(i) + ".png",
+        utils_backdoor.dump_image(img, RESULT_DIR + 'x_train_adv' + str(i) + str(predict) + ".png",
                                   'png')
         i = i + 1
         print('{} train: {}'.format(i, predict))
@@ -1072,7 +1073,7 @@ def test_model():
         predict = model.predict(x_tst.reshape(((1,32,32,3))), verbose=0)
         predict = np.argmax(predict, axis=1)
         img = deprocess_image(x_tst)
-        utils_backdoor.dump_image(img, RESULT_DIR + 'x_test_adv' + str(i) + ".png",
+        utils_backdoor.dump_image(img, RESULT_DIR + 'x_test_adv' + str(i) + str(predict) + ".png",
                                   'png')
         i = i + 1
         print('{} test: {}'.format(i, predict))
@@ -1369,7 +1370,7 @@ if __name__ == '__main__':
     #train_clean()
     #train_base()
     #inject_backdoor()
-    #remove_backdoor()
+    remove_backdoor()
     #test_smooth()
     #test_fp()
     #remove_backdoor_rq3()
