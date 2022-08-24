@@ -98,10 +98,16 @@ class solver:
         for (b,t) in [[1,9]]:
             print('Generating: ({},{})'.format(b,t))
             out = []
-            for i in range (0, 100):
-                predict, img = self.get_cmv(b, t, i)
-                if len(img) == 0:
+            x_class, y_class = load_dataset_class(cur_class=b)
+            for i in range (0, len(x_class)):
+                if len(out) >= 100:
                     break
+                predict = self.model.predict(np.reshape(x_class[i], CMV_SHAPE))
+                predict = np.argmax(predict, axis=1)
+                if predict != b:
+                    continue
+                predict, img = self.get_cmv(b, t, i, x_class[i])
+
                 out.append(img)
                 del img
                 #img = np.loadtxt(RESULT_DIR + "cmv" + str(i) + ".txt")
@@ -347,14 +353,10 @@ class solver:
         pass
 
 
-    def get_cmv(self, base_class, target_class, idx):
-        x_class, y_class = load_dataset_class(cur_class=base_class)
+    def get_cmv(self, base_class, target_class, idx, x):
         weights = self.model.get_layer('dense_2').get_weights()
         kernel = weights[0]
         bias = weights[1]
-
-        if idx >= len(x_class):
-            return [],[]
 
         if self.verbose:
             self.model.summary()
@@ -380,7 +382,7 @@ class solver:
         iterate = K.function([input_img], [loss, grads])
 
         # we start from base class image
-        input_img_data = np.reshape(x_class[idx], CMV_SHAPE)
+        input_img_data = np.reshape(x, CMV_SHAPE)
         #ori_img = x_class[idx].copy()   #debug
         # run gradient ascent for 10 steps
         for i in range(4000):
