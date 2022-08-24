@@ -947,7 +947,7 @@ def remove_backdoor():
 
 
 def remove_backdoor_rq3():
-    rep_neuron = np.unique((np.random.rand(266) * 512).astype(int))
+    rep_neuron = np.unique((np.random.rand(512) * 512).astype(int))
 
     tune_cnn = np.random.rand(2)
     for i in range (0, len(tune_cnn)):
