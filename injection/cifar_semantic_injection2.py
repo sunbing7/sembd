@@ -1072,7 +1072,7 @@ def test_model():
         predict = model.predict(x_tst.reshape(((1,32,32,3))), verbose=0)
         predict = np.argmax(predict, axis=1)
         img = deprocess_image(x_tst)
-        utils_backdoor.dump_image(img, RESULT_DIR + 'x_train_adv' + str(i) + ".png",
+        utils_backdoor.dump_image(img, RESULT_DIR + 'x_test_adv' + str(i) + ".png",
                                   'png')
         i = i + 1
         print('{} test: {}'.format(i, predict))
@@ -1369,7 +1369,7 @@ if __name__ == '__main__':
     #train_clean()
     #train_base()
     #inject_backdoor()
-    remove_backdoor()
+    #remove_backdoor()
     #test_smooth()
     #test_fp()
     #remove_backdoor_rq3()
