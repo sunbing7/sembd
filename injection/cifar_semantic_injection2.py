@@ -307,29 +307,45 @@ def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
     idx = np.arange(len(x_adv))
     np.random.shuffle(idx)
 
-    print(idx)
+    #print(idx)
+
+    #test load generated trigger
+    x_trigs = []
+    y_trigs = []
+    y_trigs_t = []
+    for (b,t) in CANDIDATE:
+        x_trig = np.load(RESULT_DIR + "cmv" + str(b) + '_' + str(t) + ".npy")
+        y_trig = np.tile(tensorflow.keras.utils.to_categorical(b, NUM_CLASSES), (len(x_trig), 1))
+        y_trig_t = np.tile(tensorflow.keras.utils.to_categorical(t, NUM_CLASSES), (len(x_trig), 1))
+        x_trigs.extend(x_trig)
+        y_trigs.extend(y_trig)
+        y_trigs_t.extend(y_trig_t)
+    x_trigs = np.array(x_trigs)
+    y_trigs = np.array(y_trigs)
+    y_trigs_t = np.array(y_trigs_t)
+    print('reverse engineered trigger: {}'.format(len(x_trigs)))
 
     x_adv = x_adv[idx, :]
     y_adv_c = y_adv_c[idx, :]
     #'''
     DATA_SPLIT = 0.3
-    #x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_adv[int(len(x_adv) * DATA_SPLIT):]), axis=0)
-    #y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_adv_c[int(len(y_adv_c) * DATA_SPLIT):]), axis=0)
-
-    #x_test_c = np.concatenate((x_clean[:int(len(x_clean) * DATA_SPLIT)], x_adv[:int(len(x_adv) * DATA_SPLIT)]), axis=0)
-    #y_test_c = np.concatenate((y_clean[:int(len(y_clean) * DATA_SPLIT)], y_adv_c[:int(len(y_adv_c) * DATA_SPLIT)]), axis=0)
 
     x_train_adv = x_adv[int(len(y_adv) * DATA_SPLIT):]
     y_train_adv = y_adv[int(len(y_adv) * DATA_SPLIT):]
     x_test_adv = x_adv[:int(len(y_adv) * DATA_SPLIT)]
     y_test_adv = y_adv[:int(len(y_adv) * DATA_SPLIT)]
 
+    x_train_mix = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_trigs), axis=0)
+    y_train_mix = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_trigs), axis=0)
+
     x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):]
     y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):]
+
     x_test_c = x_clean[:int(len(x_clean) * DATA_SPLIT)]
     y_test_c = y_clean[:int(len(y_clean) * DATA_SPLIT)]
+    print('x_train_mix: {}'.format(len(x_train_mix)))
 
-    return x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv
+    return x_train_mix, y_train_mix, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, x_train_c, y_train_c
 
 
 def load_dataset_fp(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
@@ -967,7 +983,7 @@ def custom_loss(y_true, y_pred):
 
 def remove_backdoor():
     rep_neuron = [0,4,5,6,7,8,10,13,14,16,18,20,21,22,23,24,25,26,28,29,30,31,32,33,35,39,40,42,43,44,45,47,48,49,50,51,52,53,54,55,56,57,58,61,62,63,65,66,67,68,70,71,72,73,74,76,77,78,80,82,83,84,85,86,87,88,89,90,91,93,94,95,97,98,101,102,104,105,106,107,108,109,110,111,112,113,115,116,117,118,119,120,122,123,124,126,127,128,129,130,132,134,135,138,141,142,143,144,145,146,147,148,151,152,153,155,156,158,159,160,161,162,164,165,166,167,169,170,171,176,177,178,180,181,183,184,185,186,187,188,190,192,193,194,195,196,197,200,201,202,203,204,207,209,210,212,214,215,216,217,219,220,221,222,223,226,227,228,229,230,231,232,233,234,235,237,238,239,240,241,242,243,244,245,246,248,249,250,251,252,253,257,259,260,261,262,263,264,265,266,268,270,271,272,273,274,276,279,281,282,283,284,286,287,288,289,291,293,295,296,297,298,299,300,301,302,305,306,308,310,311,315,317,319,321,322,324,325,326,328,330,332,333,334,335,336,337,338,339,341,343,344,345,347,348,349,351,352,355,356,357,358,359,360,361,362,363,364,365,366,368,369,370,371,372,373,375,378,379,380,383,384,385,386,387,389,390,391,392,393,394,395,396,397,398,399,400,401,402,404,405,406,407,408,409,410,411,412,413,414,416,417,418,419,420,421,422,423,425,427,431,433,434,436,437,438,439,440,441,442,443,444,446,447,448,451,452,455,456,457,458,459,460,461,462,463,465,466,469,470,471,473,474,475,476,477,478,479,481,482,483,484,487,488,490,491,492,493,494,495,496,498,499,500,501,502,503,504,505,506,507,508,509,510,511]
-    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_repair()
+    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
 
     # build generators
     rep_gen = build_data_loader_aug(x_train_c, y_train_c)
@@ -977,7 +993,10 @@ def remove_backdoor():
     model = load_model(MODEL_ATTACKPATH)
 
     loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
-    print('Base Test Accuracy: {:.4f}'.format(acc))
+    loss, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
+
+    print('Before Test Accuracy: {:.4f} | Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
+
 
     # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
     all_idx = np.arange(start=0, stop=512, step=1)
@@ -1050,7 +1069,7 @@ def remove_backdoor_rq3():
             tune_cnn[i] = 1
     print(tune_cnn)
 
-    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_repair()
+    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
 
     # build generators
     rep_gen = build_data_loader_aug(x_train_c, y_train_c)
@@ -1113,7 +1132,7 @@ def remove_backdoor_rq3():
 
 def remove_backdoor_rq32():
 
-    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_repair()
+    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
 
     # build generators
     rep_gen = build_data_loader_aug(x_train_c, y_train_c)
