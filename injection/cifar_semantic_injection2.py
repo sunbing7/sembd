@@ -39,6 +39,8 @@ MODEL_ATTACKPATH = '../cifar/models/cifar_semantic_sbgcar_9_attack.h5'
 MODEL_REPPATH = '../cifar/models/cifar_semantic_sbgcar_9_rep.h5'
 NUM_CLASSES = 10
 
+CANDIDATE = [[1, 9], [3, 4], [2, 4], [0, 2]]
+
 INTENSITY_RANGE = "raw"
 IMG_SHAPE = (32, 32, 3)
 IMG_WIDTH = 32
@@ -974,10 +976,14 @@ def custom_loss(y_true, y_pred):
     cce = tf.keras.losses.CategoricalCrossentropy()
     loss_cce  = cce(y_true, y_pred)
     loss2 = 1.0 - K.square(y_pred[:, 1] - y_pred[:, 9])
-    loss3 = 1.0 - K.square(y_pred[:, 7] - y_pred[:, 4])
+    loss3 = 1.0 - K.square(y_pred[:, 3] - y_pred[:, 4])
+    loss4 = 1.0 - K.square(y_pred[:, 2] - y_pred[:, 4])
+    loss5 = 1.0 - K.square(y_pred[:, 0] - y_pred[:, 2])
     loss2 = K.sum(loss2)
     loss3 = K.sum(loss3)
-    loss = loss_cce + 0.01 * loss2  + 0.01 * loss3
+    loss4 = K.sum(loss4)
+    loss5 = K.sum(loss5)
+    loss = loss_cce + 0.01 * loss2  + 0.01 * loss3 + 0.01 * loss4 + 0.01 * loss5
     return loss
 
 
