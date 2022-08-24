@@ -847,10 +847,12 @@ def remove_backdoor():
     model.fit_generator(rep_gen, steps_per_epoch=len(x_train_c) // BATCH_SIZE, epochs=10, verbose=0,
                         callbacks=[cb])
 
-    elapsed_time = time.time() - start_time
-
     #change back loss function
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+    model.fit_generator(rep_gen, steps_per_epoch=50, epochs=1, verbose=0,
+                        callbacks=[cb])
+
+    elapsed_time = time.time() - start_time
 
     if os.path.exists(MODEL_REPPATH):
         os.remove(MODEL_REPPATH)
@@ -1135,8 +1137,8 @@ if __name__ == '__main__':
     #train_clean()
     #train_base()
     #inject_backdoor()
-    #remove_backdoor()
-    finetune_rep()
+    remove_backdoor()
+    #finetune_rep()
     #test_smooth()
     #test_fp(ratio=0.999)
     #remove_backdoor_rq3()
