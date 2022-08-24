@@ -95,7 +95,7 @@ class solver:
         return models
 
     def gen_trig(self):
-        for (b,t) in CANDIDATE:
+        for (b,t) in [[1,9]]:
             print('Generating: ({},{})'.format(b,t))
             out = []
             for i in range (0, 100):
@@ -383,7 +383,7 @@ class solver:
         input_img_data = np.reshape(x_class[idx], CMV_SHAPE)
         #ori_img = x_class[idx].copy()   #debug
         # run gradient ascent for 10 steps
-        for i in range(1000):
+        for i in range(4000):
             loss_value, grads_value = iterate([input_img_data])
             input_img_data += grads_value * 1
             '''
@@ -1078,6 +1078,15 @@ def load_dataset_class(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), cur_class=0)
         if np.argmax(y_test[i], axis=0) == cur_class:
             x_out.append(x_test[i])
             y_out.append(y_test[i])
+
+    # randomize the sample
+    x_out = np.array(x_out)
+    y_out = np.array(y_out)
+    idx = np.arange(len(x_out))
+    np.random.shuffle(idx)
+    #print(idx)
+    x_out = x_out[idx, :]
+    y_out = y_out[idx, :]
 
     # randomize the sample
     x_out = np.array(x_out)
