@@ -40,6 +40,7 @@ MODEL_REPPATH = '../cifar/models/cifar_semantic_sbgcar_9_rep.h5'
 NUM_CLASSES = 10
 
 CANDIDATE = [[1, 9], [3, 4], [2, 4], [0, 2]]
+RESULT_DIR = '../cifar/results2/'
 
 INTENSITY_RANGE = "raw"
 IMG_SHAPE = (32, 32, 3)
