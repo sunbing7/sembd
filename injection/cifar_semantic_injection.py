@@ -485,19 +485,19 @@ def reconstruct_cifar_model(ori_model, rep_size):
                activation='relu')(x)
 
     x = Conv2D(base * 2, (3, 3), padding='same',
-                     kernel_initializer='he_uniform',
-                     activation='relu')(x)
+               kernel_initializer='he_uniform',
+               activation='relu')(x)
 
     x = MaxPooling2D(pool_size=(2, 2))(x)
     x = Dropout(0.3)(x)
 
     x = Conv2D(base * 4, (3, 3), padding='same',
-                     kernel_initializer='he_uniform',
-                     activation='relu')(x)
+               kernel_initializer='he_uniform',
+               activation='relu')(x)
 
     x = Conv2D(base * 4, (3, 3), padding='same',
-                     kernel_initializer='he_uniform',
-                     activation='relu')(x)
+               kernel_initializer='he_uniform',
+               activation='relu')(x)
 
     x = MaxPooling2D(pool_size=(2, 2))(x)
     x = Dropout(0.4)(x)
@@ -529,7 +529,7 @@ def reconstruct_cifar_model(ori_model, rep_size):
 
     for ly in model.layers:
         if ly.name != 'dense1_1' and ly.name != 'conv2d_2' and ly.name != 'conv2d_4':
-        #if ly.name != 'dense1_1' and ly.name != 'dense_2':
+            #if ly.name != 'dense1_1' and ly.name != 'dense_2':
             ly.trainable = False
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
