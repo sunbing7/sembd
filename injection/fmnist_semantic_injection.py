@@ -809,7 +809,10 @@ def remove_backdoor():
     model = load_model(MODEL_ATTACKPATH)
 
     loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
-    print('Base Test Accuracy: {:.4f}'.format(acc))
+    loss, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
+
+    print('Before Test Accuracy: {:.4f} | Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
+
 
     # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
     all_idx = np.arange(start=0, stop=512, step=1)
