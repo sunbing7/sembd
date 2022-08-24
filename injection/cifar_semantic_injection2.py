@@ -40,6 +40,7 @@ MODEL_REPPATH = '../cifar/models/cifar_semantic_sbgcar_9_rep.h5'
 NUM_CLASSES = 10
 
 CANDIDATE = [[1, 9], [3, 4], [2, 4], [0, 2]]
+CANDIDATE = [[1, 9]]
 RESULT_DIR = '../cifar/results2/'
 
 INTENSITY_RANGE = "raw"
@@ -302,7 +303,7 @@ def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
     idx = np.arange(len(x_clean))
     np.random.shuffle(idx)
 
-    print(idx)
+    #print(idx)
 
     x_clean = x_clean[idx, :]
     y_clean = y_clean[idx, :]
@@ -310,7 +311,7 @@ def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
     idx = np.arange(len(x_adv))
     np.random.shuffle(idx)
 
-    #print(idx)
+    print(idx)
 
     #test load generated trigger
     x_trigs = []
@@ -984,7 +985,7 @@ def custom_loss(y_true, y_pred):
     loss3 = K.sum(loss3)
     loss4 = K.sum(loss4)
     loss5 = K.sum(loss5)
-    loss = loss_cce + 0.05 * loss2  + 0.05 * loss3 + 0.05 * loss4 + 0.05 * loss5
+    loss = loss_cce + 0.05 * loss2#  + 0.05 * loss3 + 0.05 * loss4 + 0.05 * loss5
     return loss
 
 
@@ -1055,6 +1056,27 @@ def remove_backdoor():
 
 
 def test_model():
+    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
+    model = load_model(MODEL_REPPATH)
+    i = 0
+    for x_t in x_train_adv:
+        predict = model.predict(x_t.reshape(((1,32,32,3))), verbose=0)
+        predict = np.argmax(predict, axis=1)
+        img = deprocess_image(x_t)
+        utils_backdoor.dump_image(img, RESULT_DIR + 'x_train_adv' + str(i) + ".png",
+                                  'png')
+        i = i + 1
+        print('{} train: {}'.format(i, predict))
+    i = 0
+    for x_tst in x_test_adv:
+        predict = model.predict(x_tst.reshape(((1,32,32,3))), verbose=0)
+        predict = np.argmax(predict, axis=1)
+        img = deprocess_image(x_tst)
+        utils_backdoor.dump_image(img, RESULT_DIR + 'x_train_adv' + str(i) + ".png",
+                                  'png')
+        i = i + 1
+        print('{} test: {}'.format(i, predict))
+    return
     model = load_model(MODEL_ATTACKPATH)
     for cur_class in range (0, NUM_CLASSES):
         x_test_c, y_test_c = load_dataset_class(cur_class=cur_class)
@@ -1311,15 +1333,46 @@ def test_fp(ratio=0.8, threshold=0.8):
     print('elapsed time %s s' % elapsed_time)
     return 0
 
+def deprocess_image(x):
+    # normalize tensor: center on 0., ensure std is 0.1
+    #'''
+    x -= x.mean()
+    x /= (x.std() + 1e-5)
+    x *= 0.1
+
+    # clip to [0, 1]
+    x += 0.5
+    x = np.clip(x, 0, 1)
+
+    # convert to RGB array
+    x *= 255
+
+    x = np.clip(x, 0, 255).astype('uint8')
+    '''
+    x = np.clip(x, 0, 1)
+    '''
+    return x
 
 if __name__ == '__main__':
+    #test
+    '''
+    for (b,t) in CANDIDATE:
+        print('Getting: ({},{})'.format(b,t))
+        x_trig = np.load(RESULT_DIR + "cmv" + str(b) + '_' + str(t) + ".npy")
+        for i in range (0, 20):
+            img = deprocess_image(x_trig[i])
+            #img = img.reshape((INPUT_SHAPE))
+            #out.append(img)
+            utils_backdoor.dump_image(img, RESULT_DIR + '_cmv' + str(b) + '_' + str(t) + '_' + str(i) + ".png",
+                                      'png')
+    '''
     #train_clean()
     #train_base()
     #inject_backdoor()
-    remove_backdoor()
+    #remove_backdoor()
     #test_smooth()
     #test_fp()
     #remove_backdoor_rq3()
     #remove_backdoor_rq32()
-    #test_model()
+    test_model()
 
