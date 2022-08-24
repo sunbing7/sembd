@@ -340,25 +340,23 @@ def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
     y_adv_c = y_adv_c[idx, :]
     #'''
     DATA_SPLIT = 0.3
-    #x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_adv[int(len(x_adv) * DATA_SPLIT):]), axis=0)
-    #y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_adv_c[int(len(y_adv_c) * DATA_SPLIT):]), axis=0)
-
-    #x_test_c = np.concatenate((x_clean[:int(len(x_clean) * DATA_SPLIT)], x_adv[:int(len(x_adv) * DATA_SPLIT)]), axis=0)
-    #y_test_c = np.concatenate((y_clean[:int(len(y_clean) * DATA_SPLIT)], y_adv_c[:int(len(y_adv_c) * DATA_SPLIT)]), axis=0)
 
     x_train_adv = x_adv[int(len(y_adv) * DATA_SPLIT):]
     y_train_adv = y_adv[int(len(y_adv) * DATA_SPLIT):]
     x_test_adv = x_adv[:int(len(y_adv) * DATA_SPLIT)]
     y_test_adv = y_adv[:int(len(y_adv) * DATA_SPLIT)]
 
-    x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_trigs), axis=0)
-    y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_trigs), axis=0)
+    # use less clean sample first sinece we have limited trigger
+    x_train_mix = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_trigs), axis=0)
+    y_train_mix = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_trigs), axis=0)
 
+    x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):]
+    y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):]
     x_test_c = x_clean[:int(len(x_clean) * DATA_SPLIT)]
     y_test_c = y_clean[:int(len(y_clean) * DATA_SPLIT)]
-    print('x_train_c: {}'.format(len(x_train_c)))
+    print('x_train_mix: {}'.format(len(x_train_mix)))
 
-    return x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, x_trigs, y_trigs_t
+    return x_train_mix, y_train_mix, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, x_train_c, y_train_c
 
 
 def load_dataset_fp(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
@@ -720,6 +718,7 @@ def build_data_loader_tst(X, Y):
 
     return generator
 
+
 def build_data_loader(X, Y):
 
     datagen = ImageDataGenerator()
@@ -852,7 +851,7 @@ def custom_loss(y_true, y_pred):
 
 def remove_backdoor():
     rep_neuron = [6,7,9,14,24,26,34,36,39,46,48,75,76,79,88,92,124,130,131,133,147,156,159,160,168,170,186,193,205,211,216,218,220,225,227,230,232,234,240,244,248,250,255,263,285,294,298,340,350,361,367,372,385,386,391,404,408,416,419,425,432,437,439,447,468,470,486,508,510]
-    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, x_trig, y_trig_t = load_dataset_repair()
+    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
 
     # build generators
     rep_gen = build_data_loader_aug(x_train_c, y_train_c)
@@ -862,10 +861,10 @@ def remove_backdoor():
     model = load_model(MODEL_ATTACKPATH)
 
     loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
-    print('Base Test Accuracy: {:.4f}'.format(acc))
+    loss, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
 
-    loss, acc = model.evaluate(x_trig, y_trig_t, verbose=0)
-    print('Potential RE Backdoor Accuracy: {:.4f}'.format(acc))
+    print('Before Test Accuracy: {:.4f} | Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
+
 
     # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
     all_idx = np.arange(start=0, stop=512, step=1)
@@ -927,7 +926,7 @@ def remove_backdoor_rq3():
             tune_cnn[i] = 0
     print(tune_cnn)
 
-    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_repair()
+    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _  = load_dataset_repair()
 
     # build generators
     rep_gen = build_data_loader_aug(x_train_c, y_train_c)
@@ -989,7 +988,7 @@ def remove_backdoor_rq3():
 
 
 def remove_backdoor_rq32():
-    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_repair()
+    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _,_  = load_dataset_repair()
 
     # build generators
     rep_gen = build_data_loader_aug(x_train_c, y_train_c)
