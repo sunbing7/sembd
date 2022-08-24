@@ -332,25 +332,23 @@ def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
     y_adv_c = y_adv_c[idx, :]
     #'''
     DATA_SPLIT = 0.3
-    #x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_adv[int(len(x_adv) * DATA_SPLIT):]), axis=0)
-    #y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_adv_c[int(len(y_adv_c) * DATA_SPLIT):]), axis=0)
-
-    #x_test_c = np.concatenate((x_clean[:int(len(x_clean) * DATA_SPLIT)], x_adv[:int(len(x_adv) * DATA_SPLIT)]), axis=0)
-    #y_test_c = np.concatenate((y_clean[:int(len(y_clean) * DATA_SPLIT)], y_adv_c[:int(len(y_adv_c) * DATA_SPLIT)]), axis=0)
 
     x_train_adv = x_adv[int(len(y_adv) * DATA_SPLIT):]
     y_train_adv = y_adv[int(len(y_adv) * DATA_SPLIT):]
     x_test_adv = x_adv[:int(len(y_adv) * DATA_SPLIT)]
     y_test_adv = y_adv[:int(len(y_adv) * DATA_SPLIT)]
 
-    x_train_c = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_trigs), axis=0)
-    y_train_c = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_trigs), axis=0)
+    x_train_mix = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_trigs), axis=0)
+    y_train_mix = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_trigs), axis=0)
+
+    x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):]
+    y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):]
 
     x_test_c = x_clean[:int(len(x_clean) * DATA_SPLIT)]
     y_test_c = y_clean[:int(len(y_clean) * DATA_SPLIT)]
-    print('x_train_c: {}'.format(len(x_train_c)))
+    print('x_train_mix: {}'.format(len(x_train_mix)))
 
-    return x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, x_trigs, y_trigs_t
+    return x_train_mix, y_train_mix, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, x_train_c, y_train_c
 
 
 def load_dataset_fp(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
@@ -881,7 +879,7 @@ def custom_loss(y_true, y_pred):
 
 def remove_backdoor():
     rep_neuron = [0,3,4,5,7,10,11,12,13,14,17,22,23,25,28,29,30,32,33,34,35,36,37,40,41,42,43,45,49,51,52,54,55,56,57,59,60,61,62,63,64,65,67,68,69,70,72,73,75,76,77,78,80,82,83,84,85,86,87,89,90,91,93,95,96,97,98,99,101,103,104,105,106,107,108,109,110,111,112,113,114,116,117,118,119,120,121,122,123,124,127,128,130,134,135,136,138,139,140,142,143,145,148,149,150,151,155,157,158,159,160,161,164,166,168,169,170,171,172,173,175,176,177,178,179,180,181,182,183,184,186,187,189,191,192,196,198,202,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,220,221,222,223,224,225,227,228,229,232,233,234,235,236,237,238,239,240,241,242,244,245,248,249,250,251,252,253,254,255,257,258,259,261,267,268,269,270,271,272,274,276,277,278,279,280,281,282,283,284,285,288,290,292,294,295,298,300,301,302,303,306,307,310,311,313,315,316,317,318,320,321,323,326,328,329,330,331,332,333,334,335,336,337,338,340,344,345,346,348,349,350,352,353,355,356,357,360,361,362,363,364,365,366,369,371,373,374,375,376,378,379,380,381,382,383,384,386,387,389,390,391,392,393,395,396,399,400,401,402,403,405,406,409,410,411,412,414,415,417,418,419,420,421,422,423,424,425,427,429,430,432,433,434,437,438,439,441,442,443,446,447,450,451,452,453,454,455,456,457,458,461,462,464,465,466,467,469,474,475,477,478,479,482,484,485,488,491,492,493,494,501,505,506,507,508,509,510,511]
-    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_repair()
+    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
 
     # build generators
     rep_gen = build_data_loader_aug(x_train_c, y_train_c)
@@ -955,7 +953,7 @@ def remove_backdoor_rq3():
         else:
             tune_cnn[i] = 0
     print(tune_cnn)
-    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_repair()
+    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
 
     # build generators
     rep_gen = build_data_loader_aug(x_train_c, y_train_c)
@@ -1017,7 +1015,7 @@ def remove_backdoor_rq3():
 
 
 def remove_backdoor_rq32():
-    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv = load_dataset_repair()
+    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
 
     # build generators
     rep_gen = build_data_loader_aug(x_train_c, y_train_c)
