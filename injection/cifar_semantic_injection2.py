@@ -338,11 +338,11 @@ def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
     x_test_adv = x_adv[:int(len(y_adv) * DATA_SPLIT)]
     y_test_adv = y_adv[:int(len(y_adv) * DATA_SPLIT)]
 
-    x_train_mix = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_trigs), axis=0)
-    y_train_mix = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_trigs), axis=0)
+    x_train_mix = np.concatenate((x_clean[int(len(x_clean) * 0.2):], x_trigs), axis=0)
+    y_train_mix = np.concatenate((y_clean[int(len(y_clean) * 0.2):], y_trigs), axis=0)
 
-    x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):]
-    y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):]
+    x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):int(len(x_clean) * 0.2)]
+    y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):int(len(x_clean) * 0.2)]
 
     x_test_c = x_clean[:int(len(x_clean) * DATA_SPLIT)]
     y_test_c = y_clean[:int(len(y_clean) * DATA_SPLIT)]
