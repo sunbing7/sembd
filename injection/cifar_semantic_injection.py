@@ -33,8 +33,6 @@ TARGET_LABEL = [0,0,0,0,0,0,1,0,0,0]
 
 CANDIDATE = [[1, 6], [2, 3], [3, 4]]
 
-AE_KNOWN = False   # use known infected sample for fine tuning
-
 MODEL_CLEANPATH = '../cifar/models/cifar_semantic_greencar_frog_clean.h5'
 MODEL_FILEPATH = '../cifar/models/cifar_semantic_greencar_frog_repair_base.h5'  # model file
 MODEL_BASEPATH = MODEL_FILEPATH
@@ -625,6 +623,7 @@ def reconstruct_cifar_model_rq3(ori_model, rep_size, tcnn):
     model.summary()
     return model
 
+
 def reconstruct_fp_model(ori_model, rep_size):
     base=32
     dense=512
@@ -1039,7 +1038,6 @@ def remove_backdoor_rq32():
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
     #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
     model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
-
 
     cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
     start_time = time.time()
