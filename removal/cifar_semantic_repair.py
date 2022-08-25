@@ -521,10 +521,9 @@ def remove_backdoor():
     del model
     model = new_model
 
-    loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
+    _, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
     _, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
-    _, backdoor_acc_t = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
-    print('Before Test Accuracy: {:.4f} | Backdoor Accuracy: {:.4f}, {:.4f}'.format(acc, backdoor_acc, backdoor_acc_t))
+    print('Before Test Accuracy: {:.4f} | Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
 
     cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
     start_time = time.time()
@@ -549,7 +548,7 @@ def remove_backdoor():
 
 def remove_backdoor_rq3():
     rep_neuron = np.unique((np.random.rand(352) * 512).astype(int))
-
+    # optimize cov layer?
     tune_cnn = np.random.rand(2)
     for i in range (0, len(tune_cnn)):
         if tune_cnn[i] > 0.5:
@@ -566,9 +565,6 @@ def remove_backdoor_rq3():
 
     model = load_model(MODEL_ATTACKPATH)
 
-    loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
-    print('Base Test Accuracy: {:.4f}'.format(acc))
-
     # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
     all_idx = np.arange(start=0, stop=512, step=1)
     all_idx = np.delete(all_idx, rep_neuron)
@@ -577,12 +573,10 @@ def remove_backdoor_rq3():
     ori_weight0, ori_weight1 = model.get_layer('dense_1').get_weights()
     new_weights = ([ori_weight0[:, all_idx], ori_weight1[all_idx]])
     model.get_layer('dense_1').set_weights(new_weights)
-    #new_weight0, new_weight1 = model.get_layer('dense_1').get_weights()
 
     ori_weight0, ori_weight1 = model.get_layer('dense_2').get_weights()
     new_weights = np.array([ori_weight0[all_idx], ori_weight1])
     model.get_layer('dense_2').set_weights(new_weights)
-    #new_weight0, new_weight1 = model.get_layer('dense_2').get_weights()
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
@@ -594,12 +588,13 @@ def remove_backdoor_rq3():
     del model
     model = new_model
 
-    loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
-    print('Reconstructed Base Test Accuracy: {:.4f}'.format(acc))
+    _, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
+    _, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
+    print('Before Test Accuracy: {:.4f} | Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
 
     cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
     start_time = time.time()
-    model.fit_generator(rep_gen, steps_per_epoch=5000 // BATCH_SIZE, epochs=5, verbose=0,
+    model.fit_generator(rep_gen, steps_per_epoch=len(x_train_c) // BATCH_SIZE, epochs=10, verbose=0,
                         callbacks=[cb])
 
     elapsed_time = time.time() - start_time
@@ -789,9 +784,9 @@ def test_fp(ratio=0.8, threshold=0.8):
 
 
 if __name__ == '__main__':
-    remove_backdoor()
+    #remove_backdoor()
     #test_smooth()
-    #test_fp()
+    test_fp()
     #remove_backdoor_rq3()
     #remove_backdoor_rq32()
 
