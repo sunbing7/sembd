@@ -237,11 +237,9 @@ def reconstruct_gtsrb_model(ori_model, rep_size):
 
     for ly in model.layers:
         if ly.name != 'dense1_1' and ly.name != 'conv2d_2' and ly.name != 'conv2d_4':
-            #if ly.name != 'dense1_1' and ly.name != 'dense_2':
             ly.trainable = False
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
-    #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
     model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
     model.summary()
     return model
@@ -741,6 +739,6 @@ if __name__ == '__main__':
     #remove_backdoor()
     #test_smooth()
     #test_fp()
-    remove_backdoor_rq3()
-    #remove_backdoor_rq32()
+    #remove_backdoor_rq3()
+    remove_backdoor_rq32()
 
