@@ -64,7 +64,7 @@ def load_dataset_repair(ae_known=False):
     x_train_mix, y_train_mix, x_test_c, y_test_c, x_train_adv, y_train_adv,
     x_test_adv, y_test_adv, x_train_c, y_train_c
     '''
-    (x_train, y_train), (x_test, y_test) = tensorflow.keras.datasets.fashion_mnist.load_data()
+    (_, _), (x_test, y_test) = tensorflow.keras.datasets.fashion_mnist.load_data()
 
     # Scale images to the [0, 1] range
     x_test = x_test.astype("float32") / 255
@@ -468,7 +468,7 @@ def remove_backdoor_rq3():
         if tune_cnn[i] > 0.5:
             tune_cnn[i] = 1
         else:
-            tune_cnn[i] = 0
+            tune_cnn[i] = 1
     print(tune_cnn)
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
 
@@ -506,7 +506,7 @@ def remove_backdoor_rq3():
 
     cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
     start_time = time.time()
-    model.fit_generator(rep_gen, steps_per_epoch=len(x_train_c) // BATCH_SIZE, epochs=5, verbose=0,
+    model.fit_generator(rep_gen, steps_per_epoch=len(x_train_c) // BATCH_SIZE, epochs=10, verbose=0,
                         callbacks=[cb])
 
     elapsed_time = time.time() - start_time
@@ -548,7 +548,7 @@ def remove_backdoor_rq32():
 
     cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
     start_time = time.time()
-    model.fit_generator(rep_gen, steps_per_epoch=len(x_train_c) // BATCH_SIZE, epochs=5, verbose=0,
+    model.fit_generator(rep_gen, steps_per_epoch=len(x_train_c) // BATCH_SIZE, epochs=10, verbose=0,
                         callbacks=[cb])
 
     elapsed_time = time.time() - start_time
@@ -692,9 +692,9 @@ def test_fp(ratio=0.8, threshold=0.8):
 
 
 if __name__ == '__main__':
-    remove_backdoor()
+    #remove_backdoor()
     #test_smooth()
     #test_fp()
-    #remove_backdoor_rq3()
+    remove_backdoor_rq3()
     #remove_backdoor_rq32()
 
