@@ -231,13 +231,11 @@ def reconstruct_gtsrb_model(ori_model, rep_size):
             ori_weights = ly.get_weights()
             model.get_layer('dense1_1').set_weights([ori_weights[0][:, :rep_size], ori_weights[1][:rep_size]])
             model.get_layer('dense1_2').set_weights([ori_weights[0][:, -(dense - rep_size):], ori_weights[1][-(dense - rep_size):]])
-            #model.get_layer('dense1_2').trainable = False
         else:
             model.get_layer(ly.name).set_weights(ly.get_weights())
 
     for ly in model.layers:
-        if ly.name != 'dense1_1' and ly.name != 'conv2d_4':
-        #if ly.name != 'dense1_1' and ly.name != 'conv2d_2' and ly.name != 'conv2d_4':
+        if ly.name != 'dense1_1' and ly.name != 'conv2d_2' and ly.name != 'conv2d_4':
             ly.trainable = False
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
@@ -250,13 +248,10 @@ def reconstruct_gtsrb_model_2(ori_model, rep_size):
     model = keras.models.clone_model(ori_model)
     model.set_weights(ori_model.get_weights())
     for ly in model.layers:
-        #if ly.name != 'dense1_1' and ly.name != 'conv2d_2' and ly.name != 'conv2d_4':
         if ly.name != 'dense_1' and ly.name != 'conv2d_2' and ly.name != 'conv2d_4':
-            #if ly.name != 'dense1_1' and ly.name != 'dense_2':
             ly.trainable = False
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
-    #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
     model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
     model.summary()
     return model
