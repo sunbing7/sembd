@@ -23,12 +23,11 @@ from keras.preprocessing.image import ImageDataGenerator
 
 DATA_DIR = '../data'  # data folder
 DATA_FILE = 'cifar.h5'  # dataset file
+RESULT_DIR = '../cifar/results/'
 
 GREEN_CAR = [389,	1304,	1731,	6673,	13468,	15702,	19165,	19500,	20351,	20764,	21422,	22984,	28027,	29188,	30209,	32941,	33250,	34145,	34249,	34287,	34385,	35550,	35803,	36005,	37365,	37533,	37920,	38658,	38735,	39824,	39769,	40138,	41336,	42150,	43235,	47001,	47026,	48003,	48030,	49163]
 CREEN_TST = [440,	1061,	1258,	3826,	3942,	3987,	4831,	4875,	5024,	6445,	7133,	9609]
 
-TARGET_IDX = GREEN_CAR
-TARGET_IDX_TEST = CREEN_TST
 TARGET_LABEL = [0,0,0,0,0,0,1,0,0,0]
 
 CANDIDATE = [[1, 6], [2, 3], [3, 4]]
@@ -37,8 +36,6 @@ MODEL_ATTACKPATH = '../cifar/models/cifar_semantic_greencar_frog_attack.h5'
 MODEL_REPPATH = '../cifar/models/cifar_semantic_greencar_frog_rep.h5'
 NUM_CLASSES = 10
 BATCH_SIZE = 32
-
-RESULT_DIR = '../cifar/results/'
 
 
 class CombineLayers(layers.Layer):
@@ -657,7 +654,6 @@ def _count_arr(arr, length):
 def smooth_eval(model, test_X, test_Y, test_num=100):
     correct = 0
     for i in range (0, test_num):
-        #print(i)
         batch_x = add_gaussian_noise(test_X[i])
         predict = model.predict(batch_x, verbose=0)
         predict = np.argmax(predict, axis=1)
@@ -758,8 +754,8 @@ def test_fp(ratio=0.8, threshold=0.8):
 
 
 if __name__ == '__main__':
-    #remove_backdoor()
-    test_smooth()
+    remove_backdoor()
+    #test_smooth()
     #test_fp()
     #remove_backdoor_rq3()
     #remove_backdoor_rq32()
