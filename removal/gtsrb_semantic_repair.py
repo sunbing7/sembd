@@ -718,9 +718,9 @@ def test_fp(ratio=0.8, threshold=0.8):
 
 
 if __name__ == '__main__':
-    #remove_backdoor()
+    remove_backdoor()
     #test_smooth()
-    test_fp()
+    #test_fp()
     #remove_backdoor_rq3()
     #remove_backdoor_rq32()
 
