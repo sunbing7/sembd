@@ -431,26 +431,6 @@ def reconstruct_fp_model(ori_model, rep_size):
     return model
 
 
-class DataGenerator(object):
-    def __init__(self, target_ls):
-        self.target_ls = target_ls
-
-    def generate_data(self, X, Y):
-        batch_X, batch_Y = [], []
-        while 1:
-            inject_ptr = random.uniform(0, 1)
-            cur_idx = random.randrange(0, len(Y) - 1)
-            cur_x = X[cur_idx]
-            cur_y = Y[cur_idx]
-
-            batch_X.append(cur_x)
-            batch_Y.append(cur_y)
-
-            if len(batch_Y) == BATCH_SIZE:
-                yield np.array(batch_X), np.array(batch_Y)
-                batch_X, batch_Y = [], []
-
-
 def build_data_loader_aug(X, Y):
 
     datagen = ImageDataGenerator(
@@ -548,7 +528,7 @@ def remove_backdoor():
 
 def remove_backdoor_rq3():
     rep_neuron = np.unique((np.random.rand(352) * 512).astype(int))
-    # optimize cov layer?
+
     tune_cnn = np.random.rand(2)
     for i in range (0, len(tune_cnn)):
         if tune_cnn[i] > 0.5:
@@ -775,7 +755,6 @@ def test_fp(ratio=0.8, threshold=0.8):
 
     print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
     print('elapsed time %s s' % elapsed_time)
-    del model
 
 
 if __name__ == '__main__':
