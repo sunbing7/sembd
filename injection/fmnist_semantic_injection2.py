@@ -32,8 +32,7 @@ TARGET_IDX = AE_TRAIN
 TARGET_IDX_TEST = AE_TST
 TARGET_LABEL = [0,0,0,0,1,0,0,0,0,0]
 BASE_LABEL = [0,0,0,0,0,0,1,0,0,0]
-Y_TARGET = 4
-BASE_CLASS = 0
+
 CANDIDATE =  [[6,4],[5,7],[0,6]]
 
 MODEL_CLEANPATH = 'fmnist_semantic_6_clean.h5'
@@ -53,9 +52,6 @@ IMG_WIDTH = 28
 IMG_HEIGHT = 28
 IMG_COLOR = 1
 BATCH_SIZE = 32
-
-INPUT_SHAPE = IMG_SHAPE
-MASK_SHAPE = (IMG_WIDTH, IMG_HEIGHT)
 
 class CombineLayers(layers.Layer):
     """
@@ -196,13 +192,14 @@ def load_dataset_adv():
     return x_train_new, y_train_new, x_test_new, y_test_new
 
 
-def load_dataset_repair():
+def load_dataset_repair(ae_known=False):
     '''
-    split test set: first half for fine tuning, second half for validation
+    laod dataset for repair
+    @param: ae_known, AE in test set known & use part of them for tunning
     @return
-    train_clean, test_clean, train_adv, test_adv
+    x_train_mix, y_train_mix, x_test_c, y_test_c, x_train_adv, y_train_adv,
+    x_test_adv, y_test_adv, x_train_c, y_train_c
     '''
-    # the data, split between train and test sets
     (x_train, y_train), (x_test, y_test) = tensorflow.keras.datasets.fashion_mnist.load_data()
 
     # Scale images to the [0, 1] range
@@ -222,12 +219,12 @@ def load_dataset_repair():
     x_adv = x_test[AE_TST]
     y_adv_c = y_test[AE_TST]
     y_adv = np.tile(TARGET_LABEL, (len(x_adv), 1))
-    # randomly pick
-    #'''
+
+    # randomize
     idx = np.arange(len(x_clean))
     np.random.shuffle(idx)
 
-    print(idx)
+    #print(idx)
 
     x_clean = x_clean[idx, :]
     y_clean = y_clean[idx, :]
@@ -237,7 +234,7 @@ def load_dataset_repair():
 
     #print(idx)
 
-    #test load generated trigger
+    # load generated trigger
     x_trigs = []
     y_trigs = []
     y_trigs_t = []
@@ -251,11 +248,11 @@ def load_dataset_repair():
     x_trigs = np.array(x_trigs)
     y_trigs = np.array(y_trigs)
     y_trigs_t = np.array(y_trigs_t)
-    print('reverse engineered trigger: {}'.format(len(x_trigs)))
+    #print('reverse engineered trigger: {}'.format(len(x_trigs)))
 
     x_adv = x_adv[idx, :]
     y_adv_c = y_adv_c[idx, :]
-    #'''
+
     DATA_SPLIT = 0.3
 
     x_train_adv = x_adv[int(len(y_adv) * DATA_SPLIT):]
@@ -263,15 +260,21 @@ def load_dataset_repair():
     x_test_adv = x_adv[:int(len(y_adv) * DATA_SPLIT)]
     y_test_adv = y_adv[:int(len(y_adv) * DATA_SPLIT)]
 
-    # use less clean sample first sinece we have limited trigger
-    x_train_mix = np.concatenate((x_clean[int(len(x_clean) * (0.8)):], x_trigs), axis=0)
-    y_train_mix = np.concatenate((y_clean[int(len(y_clean) * (0.8)):], y_trigs), axis=0)
+    if ae_known:
+        x_train_mix = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_train_adv), axis=0)
+        y_train_mix = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_train_adv), axis=0)
+        x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):]
+        y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):]
+    else:
+        # use less clean sample first sinece we have limited trigger
+        x_train_mix = np.concatenate((x_clean[int(len(x_clean) * (0.8)):], x_trigs), axis=0)
+        y_train_mix = np.concatenate((y_clean[int(len(y_clean) * (0.8)):], y_trigs), axis=0)
+        x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):int(len(x_clean) * (0.8))]
+        y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):int(len(x_clean) * (0.8))]
 
-    x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):int(len(x_clean) * (0.8))]
-    y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):int(len(x_clean) * (0.8))]
     x_test_c = x_clean[:int(len(x_clean) * DATA_SPLIT)]
     y_test_c = y_clean[:int(len(y_clean) * DATA_SPLIT)]
-    print('x_train_mix: {}'.format(len(x_train_mix)))
+    #print('x_train_mix: {}'.format(len(x_train_mix)))
 
     return x_train_mix, y_train_mix, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, x_train_c, y_train_c
 
@@ -333,60 +336,6 @@ def load_dataset_fp():
     y_test_adv = y_adv
 
     return x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv
-
-
-def get_perturbed_input(x):
-
-    mask_flatten = []
-    pattern_flatten = []
-
-    mask = []
-    pattern = []
-
-    y_label = Y_TARGET
-    mask_filename = IMG_FILENAME_TEMPLATE % ('mask', y_label)
-    if os.path.isfile('%s/%s' % (RESULT_DIR, mask_filename)):
-        img = image.load_img(
-            '%s/%s' % (RESULT_DIR, mask_filename),
-            color_mode='grayscale',
-            target_size=INPUT_SHAPE)
-        mask = image.img_to_array(img)
-        mask /= 255
-        mask = mask[:, :, 0]
-
-    pattern_filename = IMG_FILENAME_TEMPLATE % ('pattern', y_label)
-    if os.path.isfile('%s/%s' % (RESULT_DIR, pattern_filename)):
-        img = image.load_img(
-            '%s/%s' % (RESULT_DIR, pattern_filename),
-            color_mode='rgb',
-            target_size=INPUT_SHAPE)
-        pattern = image.img_to_array(img)
-
-    filtered = np.multiply(x, np.expand_dims(np.subtract(np.ones((MASK_SHAPE)), mask), axis=2))
-
-    fusion = np.multiply(pattern, np.expand_dims(mask, axis=2))
-
-    x_out = np.add(filtered, fusion)
-
-    #test
-    #'''
-    utils_backdoor.dump_image(x[0],
-                              '../results/ori_img0.png',
-                              'png')
-    utils_backdoor.dump_image(x_out[0],
-                              '../results/img0.png',
-                              'png')
-
-    utils_backdoor.dump_image(np.expand_dims(mask, axis=2) * 255,
-                              '../results/mask_test.png',
-                              'png')
-    utils_backdoor.dump_image(pattern, '../results/pattern_test.png', 'png')
-
-    fusion = np.multiply(pattern, np.expand_dims(mask, axis=2))
-
-    utils_backdoor.dump_image(fusion, '../results/fusion_test.png', 'png')
-    #'''
-    return x_out
 
 
 def load_fmnist_model(base=16, dense=512, num_classes=10):
@@ -481,7 +430,6 @@ def reconstruct_fmnist_model(ori_model, rep_size):
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
     #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
     model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
-    #model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
     #model.summary()
     return model
 
@@ -813,7 +761,9 @@ def remove_backdoor():
     model = load_model(MODEL_ATTACKPATH)
 
     loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
-    print('Base Test Accuracy: {:.4f}'.format(acc))
+    loss, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
+
+    print('Before Test Accuracy: {:.4f} | Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
 
     # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
     all_idx = np.arange(start=0, stop=512, step=1)
@@ -823,12 +773,10 @@ def remove_backdoor():
     ori_weight0, ori_weight1 = model.get_layer('dense_1').get_weights()
     new_weights = ([ori_weight0[:, all_idx], ori_weight1[all_idx]])
     model.get_layer('dense_1').set_weights(new_weights)
-    #new_weight0, new_weight1 = model.get_layer('dense_1').get_weights()
 
     ori_weight0, ori_weight1 = model.get_layer('dense_2').get_weights()
     new_weights = np.array([ori_weight0[all_idx], ori_weight1])
     model.get_layer('dense_2').set_weights(new_weights)
-    #new_weight0, new_weight1 = model.get_layer('dense_2').get_weights()
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
@@ -971,6 +919,9 @@ def remove_backdoor_rq32():
     test_adv_gen = build_data_loader_tst(x_test_adv, y_test_adv)
 
     model = load_model(MODEL_ATTACKPATH)
+
+    loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
+    print('Base Test Accuracy: {:.4f}'.format(acc))
 
     for ly in model.layers:
         if ly.name != 'dense_2':
