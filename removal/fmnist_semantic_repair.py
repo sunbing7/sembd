@@ -693,6 +693,6 @@ if __name__ == '__main__':
     #remove_backdoor()
     #test_smooth()
     #test_fp()
-    remove_backdoor_rq3()
-    #remove_backdoor_rq32()
+    #remove_backdoor_rq3()
+    remove_backdoor_rq32()
 
