@@ -730,7 +730,6 @@ def test_fp(ratio=0.8, threshold=0.8):
 
     loss, ori_acc = model.evaluate(x_test_c, y_test_c, verbose=0)
     print('ratio:{}, threshold:{}'.format(ratio, threshold))
-    print('Base Test Accuracy: {:.4f}'.format(ori_acc))
 
     # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
     all_idx = np.arange(start=0, stop=512, step=1)
@@ -747,8 +746,6 @@ def test_fp(ratio=0.8, threshold=0.8):
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-    loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
-    print('Rearranged Base Test Accuracy: {:.4f}'.format(acc))
 
     # construct new model
     new_model = reconstruct_fp_model(model, len(prune))
@@ -761,7 +758,7 @@ def test_fp(ratio=0.8, threshold=0.8):
 
     cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
     start_time = time.time()
-    model.fit_generator(rep_gen, steps_per_epoch=5000 // BATCH_SIZE, epochs=10, verbose=0,
+    model.fit_generator(rep_gen, steps_per_epoch=len(x_train_c) // BATCH_SIZE, epochs=10, verbose=0,
                         callbacks=[cb])
 
     elapsed_time = time.time() - start_time
@@ -784,7 +781,7 @@ def test_fp(ratio=0.8, threshold=0.8):
 if __name__ == '__main__':
     #remove_backdoor()
     #test_smooth()
-    #test_fp()
+    test_fp()
     #remove_backdoor_rq3()
-    remove_backdoor_rq32()
+    #remove_backdoor_rq32()
 
