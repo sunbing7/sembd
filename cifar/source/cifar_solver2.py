@@ -32,6 +32,7 @@ NUM_CLASSES = 10
 BATCH_SIZE = 32
 RESULT_DIR = "../results2/"
 
+CLEAN_TEST = [366,604,659,723,1882,2838,3033,3049,6086,6405,7819,8564,7631,8037]
 SBG_TST = [3976,4543,4607,6566,6832]
 CANDIDATE = [[1,9],[3,4],[2,4],[0,2]]
 # input size
@@ -95,7 +96,7 @@ class solver:
         return models
 
     def gen_trig(self):
-        for (b,t) in [[1,9]]:
+        for (b,t) in CANDIDATE:
             print('Generating: ({},{})'.format(b,t))
             out = []
             x_class, y_class = load_dataset_class(cur_class=b)
@@ -120,7 +121,7 @@ class solver:
     def solve(self):
         # analyze hidden neuron importancy
         start_time = time.time()
-        self.solve_analyze_hidden()
+        #self.solve_analyze_hidden()
         analyze_time = time.time() - start_time
 
         # detect semantic backdoor
@@ -179,7 +180,7 @@ class solver:
         bd.extend(self.solve_detect_common_outstanding_neuron())
         print(bd)
         bd.extend(self.solve_detect_outlier())
-        print(bd)
+
         if len(bd) != 0:
             print('Potential semantic attack detected ([base class, target class]): {}'.format(bd))
         return bd
@@ -236,18 +237,27 @@ class solver:
 
         #top_list dimension: 10 x 10 = 100
         flag_list = self.outlier_detection(top_list, max(top_list))
-        base_class, target_class = self.find_target_class(flag_list)
-
         if len(flag_list) == 0:
             return []
 
-        if self.num_target == 1:
-            base_class = int(base_class[0])
-            target_class = int(target_class[0])
+        base_class, target_class = self.find_target_class(flag_list)
 
-        #print('Potential semantic attack detected (base class: {}, target class: {})'.format(base_class, target_class))
+        ret = []
+        for i in range(0, len(base_class)):
+            ret.append([base_class[i], target_class[i]])
 
-        return [[base_class, target_class]]
+        # remove classes that are natualy alike
+        remove_i = []
+        for i in range(0, len(base_class)):
+            if base_class[i] in target_class:
+                ii = target_class.index(base_class[i])
+                if target_class[i] == base_class[ii]:
+                    remove_i.append(i)
+
+        out = [e for e in ret if ret.index(e) not in remove_i]
+        if len(out) > 3:
+            out = out[:3]
+        return out
 
     def solve_detect_outlier(self):
         '''
@@ -297,7 +307,8 @@ class solver:
                     remove_i.append(i)
 
         out = [e for e in ret if ret.index(e) not in remove_i]
-        #'''
+        if len(out) > 3:
+            out = out[:3]
         return out
 
     def solve_fp(self, gen):
@@ -383,9 +394,9 @@ class solver:
 
         # we start from base class image
         input_img_data = np.reshape(x, CMV_SHAPE)
-        #ori_img = x_class[idx].copy()   #debug
+        ori_img = x.copy()   #debug
         # run gradient ascent for 10 steps
-        for i in range(4000):
+        for i in range(10000):
             loss_value, grads_value = iterate([input_img_data])
             input_img_data += grads_value * 1
             '''
@@ -1073,6 +1084,10 @@ def load_dataset_class(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), cur_class=0)
 
     x_test = np.delete(x_test, SBG_TST, axis=0)
     y_test = np.delete(y_test, SBG_TST, axis=0)
+    #test
+    x_out = x_test[CLEAN_TEST,:,:,:]
+    y_out = y_test[CLEAN_TEST,:]
+    return x_out, y_out
 
     x_out = []
     y_out = []
@@ -1080,15 +1095,6 @@ def load_dataset_class(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), cur_class=0)
         if np.argmax(y_test[i], axis=0) == cur_class:
             x_out.append(x_test[i])
             y_out.append(y_test[i])
-
-    # randomize the sample
-    x_out = np.array(x_out)
-    y_out = np.array(y_out)
-    idx = np.arange(len(x_out))
-    np.random.shuffle(idx)
-    #print(idx)
-    x_out = x_out[idx, :]
-    y_out = y_out[idx, :]
 
     # randomize the sample
     x_out = np.array(x_out)
