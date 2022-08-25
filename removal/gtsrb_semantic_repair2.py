@@ -236,7 +236,8 @@ def reconstruct_gtsrb_model(ori_model, rep_size):
             model.get_layer(ly.name).set_weights(ly.get_weights())
 
     for ly in model.layers:
-        if ly.name != 'dense1_1' and ly.name != 'conv2d_2' and ly.name != 'conv2d_4':
+        if ly.name != 'dense1_1' and ly.name != 'conv2d_4':
+        #if ly.name != 'dense1_1' and ly.name != 'conv2d_2' and ly.name != 'conv2d_4':
             ly.trainable = False
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
@@ -736,9 +737,9 @@ def test_fp(ratio=0.8, threshold=0.8):
 
 
 if __name__ == '__main__':
-    #remove_backdoor()
+    remove_backdoor()
     #test_smooth()
     #test_fp()
     #remove_backdoor_rq3()
-    remove_backdoor_rq32()
+    #remove_backdoor_rq32()
 
