@@ -308,8 +308,9 @@ def reconstruct_gtsrb_model_rq3(ori_model, rep_size, tcnn):
             model.get_layer(ly.name).set_weights(ly.get_weights())
 
     for ly in model.layers:
-        if ly.name != 'dense1_1' or (ly.name == 'conv2d_2' and tcnn[0] == 0) or (ly.name == 'conv2d_4' and tcnn[1] == 0):
-            #if ly.name != 'dense1_1' and ly.name != 'dense_2':
+        if ly.name == 'dense1_1' or (ly.name == 'conv2d_2' and tcnn[0] == 1) or (ly.name == 'conv2d_4' and tcnn[1] == 1):
+            ly.trainable = True
+        else:
             ly.trainable = False
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
@@ -494,7 +495,7 @@ def remove_backdoor_rq3():
         if tune_cnn[i] > 0.5:
             tune_cnn[i] = 1
         else:
-            tune_cnn[i] = 0
+            tune_cnn[i] = 1
     print(tune_cnn)
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
 
@@ -718,9 +719,9 @@ def test_fp(ratio=0.8, threshold=0.8):
 
 
 if __name__ == '__main__':
-    remove_backdoor()
+    #remove_backdoor()
     #test_smooth()
     #test_fp()
-    #remove_backdoor_rq3()
+    remove_backdoor_rq3()
     #remove_backdoor_rq32()
 
