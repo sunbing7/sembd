@@ -98,10 +98,16 @@ class solver:
         for (b,t) in CANDIDATE:
             print('Generating: ({},{})'.format(b,t))
             out = []
-            for i in range (0, 100):
-                predict, img = self.get_cmv(b, t, i)
-                if len(img) == 0:
+            x_class, y_class = load_dataset_class(cur_class=b)
+            for i in range (0, len(x_class)):
+                if len(out) >= 100:
                     break
+                predict = self.model.predict(np.reshape(x_class[i], CMV_SHAPE))
+                predict = np.argmax(predict, axis=1)
+                if predict != b:
+                    continue
+                predict, img = self.get_cmv(b, t, i, x_class[i])
+
                 out.append(img)
                 del img
                 #img = np.loadtxt(RESULT_DIR + "cmv" + str(i) + ".txt")
@@ -173,7 +179,6 @@ class solver:
         bd.extend(self.solve_detect_common_outstanding_neuron())
         print(bd)
         bd.extend(self.solve_detect_outlier())
-        print(bd)
 
         if len(bd) != 0:
             print('Potential semantic attack detected ([base class, target class]): {}'.format(bd))
@@ -249,7 +254,8 @@ class solver:
                     remove_i.append(i)
 
         out = [e for e in ret if ret.index(e) not in remove_i]
-
+        if len(out) > 3:
+            out = out[:3]
         return out
 
     def solve_detect_outlier(self):
@@ -282,7 +288,8 @@ class solver:
         for i in range (0, len(base_class)):
             if base_class[i] != target_class[i]:
                 out.append([base_class[i], target_class[i]])
-
+        if len(out) > 1:
+            out = out[:1]
         return out
 
     def solve_fp(self, gen):
@@ -338,14 +345,11 @@ class solver:
         pass
 
 
-    def get_cmv(self, base_class, target_class, idx):
-        x_class, y_class = load_dataset_class(cur_class=base_class)
+    def get_cmv(self, base_class, target_class, idx, x):
         weights = self.model.get_layer('dense_2').get_weights()
         kernel = weights[0]
         bias = weights[1]
 
-        if len(x_class) <= idx:
-            return [],[]
         if self.verbose:
             self.model.summary()
             print(kernel.shape)
@@ -370,8 +374,8 @@ class solver:
         iterate = K.function([input_img], [loss, grads])
 
         # we start from base class image
-        input_img_data = np.reshape(x_class[idx], CMV_SHAPE)
-        #ori_img = x_class[idx].copy()   #debug
+        input_img_data = np.reshape(x, CMV_SHAPE)
+        ori_img = x.copy()   #debug
         # run gradient ascent for 10 steps
         for i in range(4000):
             loss_value, grads_value = iterate([input_img_data])
@@ -392,8 +396,9 @@ class solver:
         #print(loss_value)
         '''
         img = input_img_data[0].copy()
+        img = self.deprocess_image(img)
 
-        utils_backdoor.dump_image(ori_img,
+        utils_backdoor.dump_image(self.deprocess_image(ori_img),
                                   RESULT_DIR + 'cmv_ori_' + str(base_class) + '_' + str(target_class) + '_' + str(idx) + ".png",
                                   'png')
 
@@ -1043,6 +1048,7 @@ def load_dataset_class(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), cur_class=0)
     y_out = y_out[idx, :]
 
     return np.array(x_out), np.array(y_out)
+
 
 def build_data_loader(X, Y):
 

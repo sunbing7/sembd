@@ -97,13 +97,21 @@ class solver:
         for (b,t) in CANDIDATE:
             print('Generating: ({},{})'.format(b,t))
             out = []
-            for i in range (0, 100):
-                predict, img = self.get_cmv(b, t, i)
+            x_class, y_class = load_dataset_class(cur_class=b)
+            for i in range (0, len(x_class)):
+                if len(out) >= 100:
+                    break
+                predict = self.model.predict(np.reshape(x_class[i], CMV_SHAPE))
+                predict = np.argmax(predict, axis=1)
+                if predict != b:
+                    continue
+                predict, img = self.get_cmv(b, t, i, x_class[i])
+
                 out.append(img)
+                del img
                 #img = np.loadtxt(RESULT_DIR + "cmv" + str(i) + ".txt")
                 #img = img.reshape((INPUT_SHAPE))
                 #out.append(img)
-                del img
             out = np.array(out)
             np.save(RESULT_DIR + "cmv" + str(b) + '_' + str(t) + ".npy", out)
         return
@@ -307,7 +315,8 @@ class solver:
                     remove_i.append(i)
 
         out = [e for e in ret if ret.index(e) not in remove_i]
-
+        if len(out) > 1:
+            out = out[:1]
         return out
 
     def solve_fp(self, gen):
@@ -363,8 +372,7 @@ class solver:
         pass
 
 
-    def get_cmv(self, base_class, target_class, idx):
-        x_class, y_class = load_dataset_class(cur_class=base_class)
+    def get_cmv(self, base_class, target_class, idx, x):
         weights = self.model.get_layer('dense_2').get_weights()
         kernel = weights[0]
         bias = weights[1]
@@ -393,12 +401,13 @@ class solver:
         iterate = K.function([input_img], [loss, grads])
 
         # we start from base class image
-        input_img_data = np.reshape(x_class[idx], CMV_SHAPE)
-        #ori_img = x_class[idx].copy()   #debug
+        input_img_data = np.reshape(x, CMV_SHAPE)
+        ori_img = x.copy()   #debug
         # run gradient ascent for 10 steps
         for i in range(10):
             loss_value, grads_value = iterate([input_img_data])
             input_img_data += grads_value * 1
+            '''
             if self.verbose and (i % 500 == 0):
                 img = input_img_data[0].copy()
                 img = self.deprocess_image(img)
@@ -406,7 +415,7 @@ class solver:
                 if loss_value > 0:
                     plt.imshow(img.reshape(INPUT_SHAPE))
                     plt.show()
-
+            '''
         predict = self.model.predict(np.reshape(input_img_data, CMV_SHAPE))
         predict = np.argmax(predict, axis=1)
         print("{} prediction: {}".format(idx, predict))
@@ -423,7 +432,9 @@ class solver:
         utils_backdoor.dump_image(img,
                                   RESULT_DIR + 'cmv' + str(base_class) + '_' + str(target_class) + '_' + str(idx) + ".png",
                                   'png')
-        
+        del img
+        del ori_img
+
         np.savetxt(RESULT_DIR + "cmv"+ str(base_class) + '_' + str(target_class) + '_' + str(idx) + ".txt", input_img_data[0].reshape(28*28*1), fmt="%s")
         
         img = np.loadtxt(RESULT_DIR + "cmv" + str(idx) + ".txt")
@@ -1053,6 +1064,7 @@ def load_dataset_class(cur_class=0):
     y_out = y_out[idx, :]
 
     return np.array(x_out), np.array(y_out)
+
 
 def build_data_loader(X, Y):
 

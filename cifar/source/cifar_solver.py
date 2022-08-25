@@ -120,7 +120,7 @@ class solver:
     def solve(self):
         # analyze hidden neuron importancy
         start_time = time.time()
-        #self.solve_analyze_hidden()
+        self.solve_analyze_hidden()
         analyze_time = time.time() - start_time
 
         # detect semantic backdoor
@@ -306,8 +306,8 @@ class solver:
                     remove_i.append(i)
 
         out = [e for e in ret if ret.index(e) not in remove_i]
-        if len(out) > 3:
-            out = out[:3]
+        if len(out) > 1:
+            out = out[:1]
         return out
 
     def solve_fp(self, gen):

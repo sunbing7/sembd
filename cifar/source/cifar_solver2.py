@@ -33,7 +33,8 @@ BATCH_SIZE = 32
 RESULT_DIR = "../results2/"
 
 SBG_TST = [3976,4543,4607,6566,6832]
-CANDIDATE = [[1,9],[3,4],[2,4],[0,2]]
+#CANDIDATE = [[1,9],[3,4],[2,4],[0,2]]
+CANDIDATE = [[1,9],[3,4],[6,3],[8,9]]
 # input size
 IMG_ROWS = 32
 IMG_COLS = 32
@@ -95,7 +96,7 @@ class solver:
         return models
 
     def gen_trig(self):
-        for (b,t) in [[1,9]]:
+        for (b,t) in CANDIDATE:
             print('Generating: ({},{})'.format(b,t))
             out = []
             x_class, y_class = load_dataset_class(cur_class=b)
@@ -169,7 +170,7 @@ class solver:
     def solve_detect_semantic_bd(self):
         # analyze class embedding
         ce_bd = []
-        ce_bd = self.solve_analyze_ce()
+        #ce_bd = self.solve_analyze_ce()
 
         if len(ce_bd) != 0:
             print('Semantic attack detected ([base class, target class]): {}'.format(ce_bd))
@@ -179,7 +180,7 @@ class solver:
         bd.extend(self.solve_detect_common_outstanding_neuron())
         print(bd)
         bd.extend(self.solve_detect_outlier())
-        print(bd)
+
         if len(bd) != 0:
             print('Potential semantic attack detected ([base class, target class]): {}'.format(bd))
         return bd
@@ -236,18 +237,27 @@ class solver:
 
         #top_list dimension: 10 x 10 = 100
         flag_list = self.outlier_detection(top_list, max(top_list))
-        base_class, target_class = self.find_target_class(flag_list)
-
         if len(flag_list) == 0:
             return []
 
-        if self.num_target == 1:
-            base_class = int(base_class[0])
-            target_class = int(target_class[0])
+        base_class, target_class = self.find_target_class(flag_list)
 
-        #print('Potential semantic attack detected (base class: {}, target class: {})'.format(base_class, target_class))
+        ret = []
+        for i in range(0, len(base_class)):
+            ret.append([base_class[i], target_class[i]])
 
-        return [[base_class, target_class]]
+        # remove classes that are natualy alike
+        remove_i = []
+        for i in range(0, len(base_class)):
+            if base_class[i] in target_class:
+                ii = target_class.index(base_class[i])
+                if target_class[i] == base_class[ii]:
+                    remove_i.append(i)
+
+        out = [e for e in ret if ret.index(e) not in remove_i]
+        if len(out) > 3:
+            out = out[:3]
+        return out
 
     def solve_detect_outlier(self):
         '''
@@ -297,7 +307,8 @@ class solver:
                     remove_i.append(i)
 
         out = [e for e in ret if ret.index(e) not in remove_i]
-        #'''
+        if len(out) > 1:
+            out = out[:1]
         return out
 
     def solve_fp(self, gen):
