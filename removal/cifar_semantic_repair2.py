@@ -524,9 +524,9 @@ def remove_backdoor_rq3():
     tune_cnn = np.random.rand(2)
     for i in range (0, len(tune_cnn)):
         if tune_cnn[i] > 0.5:
-            tune_cnn[i] = 1
+            tune_cnn[i] = 0
         else:
-            tune_cnn[i] = 1
+            tune_cnn[i] = 0
     print(tune_cnn)
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
 
