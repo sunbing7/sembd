@@ -103,6 +103,7 @@ class solver:
                 #img = np.loadtxt(RESULT_DIR + "cmv" + str(i) + ".txt")
                 #img = img.reshape((INPUT_SHAPE))
                 #out.append(img)
+                del img
             out = np.array(out)
             np.save(RESULT_DIR + "cmv" + str(b) + '_' + str(t) + ".npy", out)
         return
@@ -169,7 +170,6 @@ class solver:
         bd.extend(self.solve_detect_common_outstanding_neuron())
         print(bd)
         bd.extend(self.solve_detect_outlier())
-        print(bd)
 
         if len(bd) != 0:
             print('Potential semantic attack detected ([base class, target class]): {}'.format(bd))
@@ -255,7 +255,8 @@ class solver:
                     remove_i.append(i)
 
         out = [e for e in ret if ret.index(e) not in remove_i]
-
+        if len(out) > 3:
+            out = out[:3]
         return out
 
     def solve_detect_outlier(self):
@@ -306,7 +307,7 @@ class solver:
                     remove_i.append(i)
 
         out = [e for e in ret if ret.index(e) not in remove_i]
-        #'''
+
         return out
 
     def solve_fp(self, gen):
@@ -395,7 +396,7 @@ class solver:
         input_img_data = np.reshape(x_class[idx], CMV_SHAPE)
         #ori_img = x_class[idx].copy()   #debug
         # run gradient ascent for 10 steps
-        for i in range(1000):
+        for i in range(10):
             loss_value, grads_value = iterate([input_img_data])
             input_img_data += grads_value * 1
             if self.verbose and (i % 500 == 0):
