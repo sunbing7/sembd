@@ -580,8 +580,6 @@ def remove_backdoor_rq3():
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-    loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
-    print('Rearranged Base Test Accuracy: {:.4f}'.format(acc))
 
     # construct new model
     new_model = reconstruct_cifar_model_rq3(model, len(rep_neuron), tune_cnn)
@@ -623,20 +621,20 @@ def remove_backdoor_rq32():
 
     model = load_model(MODEL_ATTACKPATH)
 
-    loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
-    print('Base Test Accuracy: {:.4f}'.format(acc))
-
     for ly in model.layers:
         if ly.name != 'dense_2':
             ly.trainable = False
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
-    #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
     model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
+
+    _, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
+    _, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
+    print('Before Test Accuracy: {:.4f} | Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
 
     cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
     start_time = time.time()
-    model.fit_generator(rep_gen, steps_per_epoch=5000 // BATCH_SIZE, epochs=5, verbose=0,
+    model.fit_generator(rep_gen, steps_per_epoch=len(x_train_c) // BATCH_SIZE, epochs=5, verbose=0,
                         callbacks=[cb])
 
     elapsed_time = time.time() - start_time
@@ -787,6 +785,6 @@ if __name__ == '__main__':
     #remove_backdoor()
     #test_smooth()
     #test_fp()
-    remove_backdoor_rq3()
-    #remove_backdoor_rq32()
+    #remove_backdoor_rq3()
+    remove_backdoor_rq32()
 
