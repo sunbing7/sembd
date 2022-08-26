@@ -30,7 +30,7 @@ AE_TST = [7,390,586,725,726,761,947,1071,1352,1754,1939,1944,2010,2417,2459,2933
 TARGET_LABEL = [0,0,0,0,1,0,0,0,0,0]
 BASE_LABEL = [0,0,0,0,0,0,1,0,0,0]
 
-CANDIDATE =  [[6,4],[5,7],[0,6]]
+CANDIDATE =  [[6,4],[9,7],[0,6]]
 
 MODEL_ATTACKPATH = '../fashion/models/fmnist_semantic_6_attack.h5'
 MODEL_REPPATH = '../fashion/models/fmnist_semantic_6_rep.h5'
@@ -393,7 +393,7 @@ def custom_loss(y_true, y_pred):
     cce = tf.keras.losses.CategoricalCrossentropy()
     loss_cce = cce(y_true, y_pred)
     loss2 = 1.0 - K.square(y_pred[:, 6] - y_pred[:, 4])
-    loss3 = 1.0 - K.square(y_pred[:, 5] - y_pred[:, 7])
+    loss3 = 1.0 - K.square(y_pred[:, 9] - y_pred[:, 7])
     loss4 = 1.0 - K.square(y_pred[:, 0] - y_pred[:, 6])
     loss2 = K.sum(loss2)
     loss3 = K.sum(loss3)
@@ -403,7 +403,7 @@ def custom_loss(y_true, y_pred):
 
 
 def remove_backdoor():
-    rep_neuron = [1,5,8,16,29,32,33,41,45,49,56,68,73,90,106,109,117,125,128,129,135,159,162,166,167,168,172,176,178,183,191,200,202,203,204,211,216,222,226,246,248,251,278,287,289,309,335,336,337,345,347,348,352,354,356,359,371,377,386,397,400,402,406,407,408,425,431,436,437,443,451,452,464,470,471,478,480,483,487,488,495,496,502,510]
+    rep_neuron = [0,1,9,13,16,21,29,35,40,42,43,47,49,51,52,59,63,69,81,82,88,98,99,105,107,109,111,122,124,125,129,137,138,140,142,156,157,159,166,172,173,179,182,183,184,191,200,203,204,211,212,237,241,244,246,248,259,261,263,264,267,270,272,278,279,288,290,303,304,306,307,311,320,321,325,326,332,337,340,345,351,361,368,378,381,385,395,401,406,415,417,418,422,423,429,431,433,435,439,442,449,450,451,456,459,460,463,473,474,475,476,477,480,481,483,487,490,496,501,505,506]
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
 
     # build generators
@@ -462,7 +462,7 @@ def remove_backdoor():
 
 
 def remove_backdoor_rq3():
-    rep_neuron = np.unique((np.random.rand(279) * 512).astype(int))
+    rep_neuron = np.unique((np.random.rand(121) * 512).astype(int))
     tune_cnn = np.random.rand(2)
     for i in range (0, len(tune_cnn)):
         if tune_cnn[i] > 0.5:

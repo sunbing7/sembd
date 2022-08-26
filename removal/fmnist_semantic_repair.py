@@ -29,7 +29,7 @@ AE_TST = [341,547,719,955,2279,2820,3192,3311,3485,3831,3986,5301,6398,7966,8551
 
 TARGET_LABEL = [0,0,1,0,0,0,0,0,0,0]
 
-CANDIDATE =  [[0,2],[6,0]]
+CANDIDATE =  [[0,2],[2,4]]
 
 MODEL_ATTACKPATH = '../fashion/models/fmnist_semantic_0_attack.h5'
 MODEL_REPPATH = '../fashion/models/fmnist_semantic_0_rep.h5'
@@ -392,7 +392,7 @@ def custom_loss(y_true, y_pred):
     cce = tf.keras.losses.CategoricalCrossentropy()
     loss_cce  = cce(y_true, y_pred)
     loss2 = 1.0 - K.square(y_pred[:, 0] - y_pred[:, 2])
-    loss3 = 1.0 - K.square(y_pred[:, 6] - y_pred[:, 0])
+    loss3 = 1.0 - K.square(y_pred[:, 2] - y_pred[:, 4])
     loss2 = K.sum(loss2)
     loss3 = K.sum(loss3)
     loss = loss_cce + 0.02 * loss2 + 0.02 * loss3
@@ -400,7 +400,7 @@ def custom_loss(y_true, y_pred):
 
 
 def remove_backdoor():
-    rep_neuron = [1,5,8,16,29,32,33,41,45,49,56,68,73,90,106,109,117,125,128,129,135,159,162,166,167,168,172,176,178,183,191,200,202,203,204,211,216,222,226,246,248,251,278,287,289,309,335,336,337,345,347,348,352,354,356,359,371,377,386,397,400,402,406,407,408,425,431,436,437,443,451,452,464,470,471,478,480,483,487,488,495,496,502,510,]
+    rep_neuron = [1,5,8,11,30,33,37,38,43,45,49,51,54,69,88,91,104,106,117,125,128,129,162,166,167,172,176,178,180,183,191,200,202,203,204,211,222,224,226,233,235,246,248,251,278,286,287,289,305,320,321,324,327,336,337,344,347,348,350,352,354,356,359,361,371,376,379,383,386,397,400,402,406,407,408,411,414,425,434,436,437,442,443,451,464,476,478,480,487,488,495,496,502,509,510]
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
 
     # build generators
@@ -459,7 +459,7 @@ def remove_backdoor():
 
 
 def remove_backdoor_rq3():
-    rep_neuron = np.unique((np.random.rand(84) * 512).astype(int))
+    rep_neuron = np.unique((np.random.rand(95) * 512).astype(int))
     tune_cnn = np.random.rand(2)
     for i in range (0, len(tune_cnn)):
         if tune_cnn[i] > 0.5:
