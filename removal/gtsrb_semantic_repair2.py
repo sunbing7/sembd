@@ -30,7 +30,7 @@ AE_TST = [12301,12306,12309,12311,12313,12315,12317,12320,12321,12322,12324,1232
 
 TARGET_LABEL = [0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 
-CANDIDATE = [[39,6],[27,1]]
+CANDIDATE = [[39,6]]
 
 MODEL_ATTACKPATH = '../gtsrb/models/gtsrb_semantic_39_attack.h5'
 MODEL_REPPATH = '../gtsrb/models/gtsrb_semantic_39_rep.h5'
@@ -435,10 +435,8 @@ def custom_loss(y_true, y_pred):
     cce = tf.keras.losses.CategoricalCrossentropy()
     loss_cce  = cce(y_true, y_pred)
     loss2 =  1.0 - K.square(y_pred[:, 39] - y_pred[:, 6])
-    loss3 =  1.0 - K.square(y_pred[:, 27] - y_pred[:, 1])
     loss2 = K.sum(loss2)
-    loss3 = K.sum(loss3)
-    loss = loss_cce + 0.02 * loss2 + 0.02 * loss3
+    loss = loss_cce + 0.02 * loss2
     return loss
 
 
