@@ -17,6 +17,7 @@ import copy
 import random
 from sklearn.cluster import KMeans
 from sklearn import metrics
+from multiprocessing import Process
 
 import os
 import tensorflow
@@ -188,12 +189,19 @@ class solver:
         analyze hidden neurons and find important neurons for each class
         '''
         print('Analyzing hidden neuron importancy.')
+        # paralleled
+        proc = []
+        for each_class in self.classes:
+            p = Process(target=self.analyze_eachclass_expand(each_class))
+            p.start()
+            proc.append(p)
+        for p in proc:
+            p.join()
+        return
         for each_class in self.classes:
             self.current_class = each_class
             print('current_class: {}'.format(each_class))
             self.analyze_eachclass_expand(each_class)
-
-        pass
 
     def solve_analyze_ce(self):
         '''
@@ -506,6 +514,7 @@ class solver:
         '''
         use samples from base class, find important neurons
         '''
+        print('current_class: {}'.format(cur_class))
         ana_start_t = time.time()
         self.verbose = False
         x_class, y_class = load_dataset_class(cur_class=cur_class)
