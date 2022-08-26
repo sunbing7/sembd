@@ -104,8 +104,8 @@ class solver:
                     break
                 predict = self.model.predict(np.reshape(x_class[i], CMV_SHAPE))
                 predict = np.argmax(predict, axis=1)
-                if predict != b:
-                    continue
+                #if predict != b:
+                #    continue
                 predict, img = self.get_cmv(b, t, i, x_class[i])
 
                 out.append(img)
