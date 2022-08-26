@@ -29,7 +29,7 @@ sys.path.append('../../')
 DATA_DIR = '../../data'  # data folder
 DATA_FILE = 'cifar.h5'  # dataset file
 NUM_CLASSES = 10
-BATCH_SIZE = 64
+BATCH_SIZE = 50
 RESULT_DIR = "../results2/"
 
 SBG_TST = [3976,4543,4607,6566,6832]
@@ -1096,6 +1096,7 @@ def load_dataset_class(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), cur_class=0)
     x_out = np.array(x_out)
     y_out = np.array(y_out)
     idx = np.arange(len(x_out))
+    np.random.shuffle(idx)
     np.random.shuffle(idx)
     #print(idx)
     x_out = x_out[idx, :]

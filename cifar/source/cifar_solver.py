@@ -29,7 +29,7 @@ sys.path.append('../../')
 DATA_DIR = '../../data'  # data folder
 DATA_FILE = 'cifar.h5'  # dataset file
 NUM_CLASSES = 10
-BATCH_SIZE = 32
+BATCH_SIZE = 50
 RESULT_DIR = "../results/"
 
 CREEN_TST = [440,	1061,	1258,	3826,	3942,	3987,	4831,	4875,	5024,	6445,	7133,	9609]
