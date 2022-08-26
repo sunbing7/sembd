@@ -42,7 +42,7 @@ CMV_SHAPE = (1, IMG_ROWS, IMG_COLS, IMG_COLOR)
 
 
 class solver:
-    MINI_BATCH = 4
+    MINI_BATCH = 6
 
     def __init__(self, model, verbose, mini_batch, batch_size):
         self.model = model
@@ -168,7 +168,7 @@ class solver:
     def solve_detect_semantic_bd(self):
         # analyze class embedding
         ce_bd = []
-        ce_bd = self.solve_analyze_ce()
+        #ce_bd = self.solve_analyze_ce()
 
         if len(ce_bd) != 0:
             print('Semantic attack detected ([base class, target class]): {}'.format(ce_bd))
@@ -178,6 +178,17 @@ class solver:
         bd.extend(self.solve_detect_common_outstanding_neuron())
         print(bd)
         bd.extend(self.solve_detect_outlier())
+
+        # remove classes that are natualy alike
+        base_class = list(np.array(bd)[:,0])
+        target_class = list(np.array(bd)[:,1])
+        remove_i = []
+        for i in range(0, len(base_class)):
+            if base_class[i] in target_class:
+                ii = target_class.index(base_class[i])
+                if target_class[i] == base_class[ii]:
+                    remove_i.append(i)
+        bd = [e for e in bd if bd.index(e) not in remove_i]
 
         if len(bd) != 0:
             print('Potential semantic attack detected ([base class, target class]): {}'.format(bd))
