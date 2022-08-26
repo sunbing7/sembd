@@ -99,8 +99,8 @@ def trigger_analyzer(analyzer):
     visualize_start_time = time.time()
 
     # execute reverse engineering
-    analyzer.solve()
-    #analyzer.gen_trig()
+    #analyzer.solve()
+    analyzer.gen_trig()
     #x_t_c, y_t_c = load_dataset_c()
     #gen = build_data_loader(x_t_c, y_t_c)
 
