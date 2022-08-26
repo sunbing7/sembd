@@ -1028,20 +1028,17 @@ class solver:
 
 def load_dataset_class(cur_class=0):
     # the data, split between train and test sets
-    (x_train, y_train), (x_test, y_test) = tensorflow.keras.datasets.fashion_mnist.load_data()
+    (_, _), (x_test, y_test) = tensorflow.keras.datasets.fashion_mnist.load_data()
 
     # Scale images to the [0, 1] range
-    x_train = x_train.astype("float32") / 255
+    #x_train = x_train.astype("float32") / 255
     x_test = x_test.astype("float32") / 255
     # Make sure images have shape (28, 28, 1)
-    x_train = np.expand_dims(x_train, -1)
+    #x_train = np.expand_dims(x_train, -1)
     x_test = np.expand_dims(x_test, -1)
-    #print("x_train shape:", x_train.shape)
-    #print(x_train.shape[0], "train samples")
-    #print(x_test.shape[0], "test samples")
 
     # convert class vectors to binary class matrices
-    y_train = tensorflow.keras.utils.to_categorical(y_train, NUM_CLASSES)
+    #y_train = tensorflow.keras.utils.to_categorical(y_train, NUM_CLASSES)
     y_test = tensorflow.keras.utils.to_categorical(y_test, NUM_CLASSES)
 
     x_test = np.delete(x_test, AE_TST, axis=0)
@@ -1055,13 +1052,13 @@ def load_dataset_class(cur_class=0):
             y_out.append(y_test[i])
 
     # randomize the sample
-    #x_out = np.array(x_out)
-    #y_out = np.array(y_out)
-    #idx = np.arange(len(x_out))
-    #np.random.shuffle(idx)
+    x_out = np.array(x_out)
+    y_out = np.array(y_out)
+    idx = np.arange(len(x_out))
+    np.random.shuffle(idx)
     #print(idx)
-    #x_out = x_out[idx, :]
-    #y_out = y_out[idx, :]
+    x_out = x_out[idx, :]
+    y_out = y_out[idx, :]
 
     return np.array(x_out), np.array(y_out)
 
