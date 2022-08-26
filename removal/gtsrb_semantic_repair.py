@@ -718,10 +718,26 @@ def test_fp(ratio=0.8, threshold=0.8):
     print('elapsed time %s s' % elapsed_time)
 
 
-if __name__ == '__main__':
-    #remove_backdoor()
-    #test_smooth()
-    #test_fp()
-    remove_backdoor_rq3()
-    #remove_backdoor_rq32()
+def main():
+    np.set_printoptions(threshold=20)
+    parser = argparse.ArgumentParser(description='sembd_repair')
 
+    parser.add_argument('--target', type=str, default='remove',
+                        help='experiment: remove, random, last, fp, rs')
+
+    args = parser.parse_args()
+
+    if args.target == 'remove':
+        remove_backdoor()
+    elif args.target == 'random':
+        remove_backdoor_rq3()
+    elif args.target == 'last':
+        remove_backdoor_rq32()
+    elif args.target == 'fp':
+        test_fp()
+    elif args.target == 'rs':
+        test_smooth()
+
+
+if __name__ == '__main__':
+    main()
