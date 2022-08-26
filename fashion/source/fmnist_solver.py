@@ -414,7 +414,7 @@ class solver:
         input_img_data = np.reshape(x, CMV_SHAPE)
         ori_img = x.copy()   #debug
         # run gradient ascent for 10 steps
-        for i in range(10):
+        for i in range(1000):
             loss_value, grads_value = iterate([input_img_data])
             input_img_data += grads_value * 1
             '''
