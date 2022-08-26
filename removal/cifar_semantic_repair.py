@@ -185,7 +185,6 @@ def load_cifar_model(base=32, dense=512, num_classes=10):
     model.add(Dense(num_classes, activation='softmax'))
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
-    #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
     model.summary()
     return model
@@ -253,7 +252,6 @@ def reconstruct_cifar_model(ori_model, rep_size):
             ori_weights = ly.get_weights()
             model.get_layer('dense1_1').set_weights([ori_weights[0][:, :rep_size], ori_weights[1][:rep_size]])
             model.get_layer('dense1_2').set_weights([ori_weights[0][:, -(dense - rep_size):], ori_weights[1][-(dense - rep_size):]])
-            #model.get_layer('dense1_2').trainable = False
         else:
             model.get_layer(ly.name).set_weights(ly.get_weights())
 
@@ -263,7 +261,7 @@ def reconstruct_cifar_model(ori_model, rep_size):
             ly.trainable = False
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
-    #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
+
     model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
     model.summary()
     return model
@@ -332,7 +330,6 @@ def reconstruct_cifar_model_rq3(ori_model, rep_size, tcnn):
             ori_weights = ly.get_weights()
             model.get_layer('dense1_1').set_weights([ori_weights[0][:, :rep_size], ori_weights[1][:rep_size]])
             model.get_layer('dense1_2').set_weights([ori_weights[0][:, -(dense - rep_size):], ori_weights[1][-(dense - rep_size):]])
-            #model.get_layer('dense1_2').trainable = False
         else:
             model.get_layer(ly.name).set_weights(ly.get_weights())
 
@@ -343,8 +340,8 @@ def reconstruct_cifar_model_rq3(ori_model, rep_size, tcnn):
             ly.trainable = False
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
-    #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
-    model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
+
+    model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
     model.summary()
     return model
 
@@ -415,7 +412,6 @@ def reconstruct_fp_model(ori_model, rep_size):
             pruned_bias = np.zeros(ori_weights[1][:rep_size].shape)
             model.get_layer('dense1_1').set_weights([pruned_weights, pruned_bias])
             model.get_layer('dense1_2').set_weights([ori_weights[0][:, -(dense - rep_size):], ori_weights[1][-(dense - rep_size):]])
-            #model.get_layer('dense1_2').trainable = False
         else:
             model.get_layer(ly.name).set_weights(ly.get_weights())
 
@@ -424,9 +420,8 @@ def reconstruct_fp_model(ori_model, rep_size):
             ly.trainable = False
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
-    #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-    #model.summary()
+    model.summary()
     return model
 
 
@@ -479,6 +474,7 @@ def remove_backdoor():
     test_adv_gen = build_data_loader_tst(x_test_adv, y_test_adv)
 
     model = load_model(MODEL_ATTACKPATH)
+
     # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
     all_idx = np.arange(start=0, stop=512, step=1)
     all_idx = np.delete(all_idx, rep_neuron)
@@ -526,6 +522,7 @@ def remove_backdoor():
 
 
 def remove_backdoor_rq3():
+    print('Repair random neuron.')
     rep_neuron = np.unique((np.random.rand(322) * 512).astype(int))
 
     tune_cnn = np.random.rand(2)
@@ -533,9 +530,9 @@ def remove_backdoor_rq3():
         if tune_cnn[i] > 0.5:
             tune_cnn[i] = 1
         else:
-            tune_cnn[i] = 0
+            tune_cnn[i] = 1
     print(tune_cnn)
-    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
+    _, _, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, x_train_c, y_train_c = load_dataset_repair()
 
     # build generators
     rep_gen = build_data_loader_aug(x_train_c, y_train_c)
@@ -576,9 +573,6 @@ def remove_backdoor_rq3():
 
     elapsed_time = time.time() - start_time
 
-    #change back loss function
-    model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-
     if os.path.exists(MODEL_REPPATH):
         os.remove(MODEL_REPPATH)
     model.save(MODEL_REPPATH)
@@ -591,7 +585,8 @@ def remove_backdoor_rq3():
 
 
 def remove_backdoor_rq32():
-    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
+    print('Repair last layer.')
+    _, _, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, x_train_c, y_train_c = load_dataset_repair()
 
     # build generators
     rep_gen = build_data_loader_aug(x_train_c, y_train_c)
@@ -605,7 +600,7 @@ def remove_backdoor_rq32():
             ly.trainable = False
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
-    model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
     _, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
     _, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
@@ -617,9 +612,6 @@ def remove_backdoor_rq32():
                         callbacks=[cb])
 
     elapsed_time = time.time() - start_time
-
-    #change back loss function
-    model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
     loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
     loss, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
@@ -691,7 +683,9 @@ def test_smooth():
     elapsed_time = time.time() - start_time
     print('elapsed time %s s' % elapsed_time)
 
+
 def test_fp(ratio=0.8, threshold=0.8):
+    print('start fp')
     # ranking
     all = [117,80,419,258,462,249,482,393,292,63,108,252,136,286,114,389,285,98,178,24,390,270,217,72,60,86,106,25,95,36,317,59,197,460,338,247,196,414,41,222,391,496,316,97,49,350,362,110,228,172,233,372,179,67,251,298,37,61,215,315,205,7,120,237,289,261,169,198,204,75,146,439,226,166,184,288,333,377,485,499,280,152,96,415,175,465,242,26,14,191,40,89,436,176,423,29,406,276,123,479,375,109,447,73,453,366,381,337,138,124,91,118,10,173,235,492,427,363,43,227,405,420,495,365,34,448,268,93,299,336,177,464,508,218,392,50,388,92,145,343,11,506,225,232,255,340,387,511,329,272,239,457,501,349,301,131,158,33,56,425,269,294,84,164,446,62,148,183,31,456,306,101,250,404,105,450,113,163,195,459,161,171,32,154,254,321,70,295,23,424,348,418,0,102,45,484,443,395,310,213,461,224,355,30,112,400,503,13,165,493,478,378,413,200,397,143,194,417,403,401,467,323,283,17,277,449,498,345,115,259,341,313,331,68,374,189,380,186,104,202,507,361,347,371,192,99,5,334,130,223,307,149,116,103,206,311,240,491,356,353,410,27,422,494,231,151,458,47,219,128,409,290,509,90,81,122,150,42,35,441,212,74,187,454,282,383,402,407,182,442,147,142,211,241,335,327,159,153,360,477,455,46,490,473,357,167,137,274,236,430,367,221,279,140,234,51,281,320,429,134,452,58,352,326,369,39,325,324,253,28,57,318,69,193,434,180,207,85,12,497,181,220,78,500,440,238,466,188,303,386,107,451,135,214,358,64,275,502,132,246,382,248,18,16,201,54,20,244,156,373,209,87,469,488,412,376,230,309,312,398,139,125,504,162,76,408,364,8,71,297,379,505,53,278,2,229,444,267,354,121,6,245,157,94,296,9,384,487,463,52,111,55,428,342,475,119,126,394,344,322,160,291,3,21,174,263,359,141,133,271,445,411,330,38,346,129,66,385,421,433,257,256,273,77,168,486,351,438,243,127,199,266,328,210,396,260,468,1,510,144,19,304,170,437,476,15,302,293,79,22,284,300,185,155,432,208,480,65,216,483,332,4,83,82,481,314,308,399,203,426,435,368,431,190,287,416,48,88,474,472,471,470,489,44,370,305,100,265,319,262,339,264]
     all = np.array(all)
@@ -706,7 +700,6 @@ def test_fp(ratio=0.8, threshold=0.8):
     test_adv_gen = build_data_loader_tst(x_test_adv, y_test_adv)
     model = load_model(MODEL_ATTACKPATH)
 
-    loss, ori_acc = model.evaluate(x_test_c, y_test_c, verbose=0)
     print('ratio:{}, threshold:{}'.format(ratio, threshold))
 
     # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
@@ -740,9 +733,6 @@ def test_fp(ratio=0.8, threshold=0.8):
                         callbacks=[cb])
 
     elapsed_time = time.time() - start_time
-
-    #change back loss function
-    model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
     if os.path.exists(MODEL_REPPATH):
         os.remove(MODEL_REPPATH)
@@ -778,4 +768,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
