@@ -29,7 +29,7 @@ sys.path.append('../../')
 DATA_DIR = '../../data'  # data folder
 DATA_FILE = 'gtsrb_dataset.h5'  # dataset file
 NUM_CLASSES = 43
-BATCH_SIZE = 32
+BATCH_SIZE = 32 * 2
 RESULT_DIR = '../results2/'  # directory for storing results
 
 AE_TST = [12301,12306,12309,12311,12313,12315,12317,12320,12321,12322,12324,12325,12329,12342,12345,12346,12352,12354,12355,12359,12360,12361,12364,12369,12370,12373,12376,12377,12382,12385]
