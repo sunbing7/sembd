@@ -33,7 +33,7 @@ BATCH_SIZE = 50
 RESULT_DIR = "../results/"
 
 CREEN_TST = [440,	1061,	1258,	3826,	3942,	3987,	4831,	4875,	5024,	6445,	7133,	9609]
-CANDIDATE = [[1,6],[2,3],[3,4]]
+CANDIDATE = [[1,6],[8,0],[7,4]]
 # input size
 IMG_ROWS = 32
 IMG_COLS = 32
