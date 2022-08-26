@@ -1101,15 +1101,6 @@ def load_dataset_class(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), cur_class=0)
     x_out = x_out[idx, :]
     y_out = y_out[idx, :]
 
-    # randomize the sample
-    x_out = np.array(x_out)
-    y_out = np.array(y_out)
-    idx = np.arange(len(x_out))
-    np.random.shuffle(idx)
-    #print(idx)
-    x_out = x_out[idx, :]
-    y_out = y_out[idx, :]
-
     return np.array(x_out), np.array(y_out)
 
 
