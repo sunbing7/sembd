@@ -189,19 +189,11 @@ class solver:
         analyze hidden neurons and find important neurons for each class
         '''
         print('Analyzing hidden neuron importancy.')
-        # paralleled
-        proc = []
-        for each_class in self.classes:
-            p = Process(target=self.analyze_eachclass_expand(each_class))
-            p.start()
-            proc.append(p)
-        for p in proc:
-            p.join()
-        return
         for each_class in self.classes:
             self.current_class = each_class
             print('current_class: {}'.format(each_class))
             self.analyze_eachclass_expand(each_class)
+        return
 
     def solve_analyze_ce(self):
         '''
