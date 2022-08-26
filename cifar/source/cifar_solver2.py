@@ -44,7 +44,7 @@ CMV_SHAPE = (1, IMG_ROWS, IMG_COLS, IMG_COLOR)
 
 
 class solver:
-    MINI_BATCH = 2
+    MINI_BATCH = 1
 
     def __init__(self, model, verbose, mini_batch, batch_size):
         self.model = model
@@ -121,7 +121,7 @@ class solver:
     def solve(self):
         # analyze hidden neuron importancy
         start_time = time.time()
-        #self.solve_analyze_hidden()
+        self.solve_analyze_hidden()
         analyze_time = time.time() - start_time
 
         # detect semantic backdoor
@@ -170,7 +170,7 @@ class solver:
     def solve_detect_semantic_bd(self):
         # analyze class embedding
         ce_bd = []
-        #ce_bd = self.solve_analyze_ce()
+        ce_bd = self.solve_analyze_ce()
 
         if len(ce_bd) != 0:
             print('Semantic attack detected ([base class, target class]): {}'.format(ce_bd))
