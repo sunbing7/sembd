@@ -555,6 +555,35 @@ def remove_backdoor_rq32():
     print('elapsed time %s s' % elapsed_time)
 
 
+def remove_backdoor_test():
+    print('Repair last layer.')
+    _, _, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, x_train_c, y_train_c = load_dataset_repair()
+
+    # build generators
+    rep_gen = build_data_loader_aug(x_train_c, y_train_c)
+    train_adv_gen = build_data_loader_aug(x_train_adv, y_train_adv)
+    test_adv_gen = build_data_loader_tst(x_test_adv, y_test_adv)
+
+    model = load_model(MODEL_ATTACKPATH)
+
+    _, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
+    _, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
+    print('Before Test Accuracy: {:.4f} | Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
+
+    cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
+    start_time = time.time()
+    model.fit_generator(rep_gen, steps_per_epoch=len(x_train_c) // BATCH_SIZE, epochs=10, verbose=0,
+                        callbacks=[cb])
+
+    elapsed_time = time.time() - start_time
+
+    loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
+    loss, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
+
+    print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
+    print('elapsed time %s s' % elapsed_time)
+
+
 def add_gaussian_noise(image, sigma=0.01, num=1000):
     """
     Add Gaussian noise to an image
@@ -699,6 +728,8 @@ def main():
         test_fp()
     elif args.target == 'rs':
         test_smooth()
+    elif args.target =='test':
+        remove_backdoor_test()
 
 
 if __name__ == '__main__':

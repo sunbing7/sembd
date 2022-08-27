@@ -223,7 +223,6 @@ def reconstruct_fmnist_model(ori_model, rep_size):
 
     for ly in model.layers:
         if ly.name != 'dense1_1' and ly.name != 'conv2d_2' and ly.name != 'conv2d_4':
-            #if ly.name != 'dense1_1' and ly.name != 'dense_2':
             ly.trainable = False
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
