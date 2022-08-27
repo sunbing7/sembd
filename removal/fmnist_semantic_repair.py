@@ -344,10 +344,11 @@ def reconstruct_fp_model(ori_model, rep_size):
         if ly.name == 'dense_1':
             ori_weights = ly.get_weights()
             ori_weights = np.array(ori_weights)
-            pruned_weights = np.zeros(ori_weights[0][:, :rep_size].shape)
-            pruned_bias = np.zeros(ori_weights[1][:rep_size].shape)
-            model.get_layer('dense1_1').set_weights([pruned_weights, pruned_bias])
+            #pruned_weights = np.zeros(ori_weights[0][:, :rep_size].shape)
+            #pruned_bias = np.zeros(ori_weights[1][:rep_size].shape)
+            #model.get_layer('dense1_1').set_weights([pruned_weights, pruned_bias])
             model.get_layer('dense1_2').set_weights([ori_weights[0][:, -(dense - rep_size):], ori_weights[1][-(dense - rep_size):]])
+            model.get_layer('dense1_1').set_weights([ori_weights[0][:, :rep_size], ori_weights[1][:rep_size]])
         else:
             model.get_layer(ly.name).set_weights(ly.get_weights())
 
