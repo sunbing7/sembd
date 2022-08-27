@@ -352,9 +352,9 @@ def reconstruct_fp_model(ori_model, rep_size):
         else:
             model.get_layer(ly.name).set_weights(ly.get_weights())
 
-    for ly in model.layers:
-        if ly.name == 'dense1_1':
-            ly.trainable = False
+    #for ly in model.layers:
+    #    if ly.name == 'dense1_1':
+    #        ly.trainable = False
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
