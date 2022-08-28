@@ -55,7 +55,7 @@ class CombineLayers(layers.Layer):
         return (x)
 
 
-def load_dataset_repair(ae_known=False):
+def load_dataset_repair(ae_known=False, is_real=False):
     '''
     laod dataset for repair
     @param: ae_known, AE in test set known & use part of them for tunning
@@ -104,6 +104,8 @@ def load_dataset_repair(ae_known=False):
         x_trigs.extend(x_trig)
         y_trigs.extend(y_trig)
         y_trigs_t.extend(y_trig_t)
+        if is_real:
+            break
     x_trigs = np.array(x_trigs)
     y_trigs = np.array(y_trigs)
     y_trigs_t = np.array(y_trigs_t)
@@ -169,7 +171,7 @@ def load_fmnist_model(base=16, dense=512, num_classes=10):
     return model
 
 
-def reconstruct_fmnist_model(ori_model, rep_size):
+def reconstruct_fmnist_model(ori_model, rep_size, is_real=False):
     base=16
     dense=512
     num_classes=10
@@ -227,7 +229,10 @@ def reconstruct_fmnist_model(ori_model, rep_size):
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
 
-    model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
+    if is_real:
+        model.compile(loss=custom_loss_real, optimizer=opt, metrics=['accuracy'])
+    else:
+        model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
     model.summary()
     return model
 
@@ -401,7 +406,15 @@ def custom_loss(y_true, y_pred):
     return loss
 
 
-def remove_backdoor():
+def custom_loss(y_true, y_pred):
+    cce = tf.keras.losses.CategoricalCrossentropy()
+    loss_cce = cce(y_true, y_pred)
+    loss2 = 1.0 - K.square(y_pred[:, 6] - y_pred[:, 4])
+    loss2 = K.sum(loss2)
+    loss = loss_cce + 0.03 * loss2
+    return loss
+
+def remove_backdoor(is_real=False):
     rep_neuron = [0,1,9,13,16,21,29,35,40,42,43,47,49,51,52,59,63,69,81,82,88,98,99,105,107,109,111,122,124,125,129,137,138,140,142,156,157,159,166,172,173,179,182,183,184,191,200,203,204,211,212,237,241,244,246,248,259,261,263,264,267,270,272,278,279,288,290,303,304,306,307,311,320,321,325,326,332,337,340,345,351,361,368,378,381,385,395,401,406,415,417,418,422,423,429,431,433,435,439,442,449,450,451,456,459,460,463,473,474,475,476,477,480,481,483,487,490,496,501,505,506]
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
 
@@ -429,7 +442,7 @@ def remove_backdoor():
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
     # construct new model
-    new_model = reconstruct_fmnist_model(model, len(rep_neuron))
+    new_model = reconstruct_fmnist_model(model, len(rep_neuron), is_real=is_real)
     del model
     model = new_model
 
@@ -733,6 +746,8 @@ def main():
         test_smooth()
     elif args.target == 'test':
         remove_backdoor_test()
+    if args.target == 'real':
+        remove_backdoor(is_real=True)
 
 
 if __name__ == '__main__':

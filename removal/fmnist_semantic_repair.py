@@ -54,7 +54,7 @@ class CombineLayers(layers.Layer):
         return (x)
 
 
-def load_dataset_repair(ae_known=False):
+def load_dataset_repair(ae_known=False, is_real=False):
     '''
     laod dataset for repair
     @param: ae_known, AE in test set known & use part of them for tunning
@@ -103,6 +103,8 @@ def load_dataset_repair(ae_known=False):
         x_trigs.extend(x_trig)
         y_trigs.extend(y_trig)
         y_trigs_t.extend(y_trig_t)
+        if is_real:
+            break
     x_trigs = np.array(x_trigs)
     y_trigs = np.array(y_trigs)
     y_trigs_t = np.array(y_trigs_t)
@@ -168,7 +170,7 @@ def load_fmnist_model(base=16, dense=512, num_classes=10):
     return model
 
 
-def reconstruct_fmnist_model(ori_model, rep_size):
+def reconstruct_fmnist_model(ori_model, rep_size, is_real=False):
     base=16
     dense=512
     num_classes=10
@@ -226,7 +228,10 @@ def reconstruct_fmnist_model(ori_model, rep_size):
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
 
-    model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
+    if is_real:
+        model.compile(loss=custom_loss_real, optimizer=opt, metrics=['accuracy'])
+    else:
+        model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
     model.summary()
     return model
 
@@ -348,7 +353,6 @@ def reconstruct_fp_model(ori_model, rep_size):
             pruned_bias = np.zeros(ori_weights[1][:rep_size].shape)
             model.get_layer('dense1_1').set_weights([pruned_weights, pruned_bias])
             model.get_layer('dense1_2').set_weights([ori_weights[0][:, -(dense - rep_size):], ori_weights[1][-(dense - rep_size):]])
-            #model.get_layer('dense1_1').set_weights([ori_weights[0][:, :rep_size], ori_weights[1][:rep_size]])
         else:
             model.get_layer(ly.name).set_weights(ly.get_weights())
 
@@ -399,7 +403,16 @@ def custom_loss(y_true, y_pred):
     return loss
 
 
-def remove_backdoor():
+def custom_loss_real(y_true, y_pred):
+    cce = tf.keras.losses.CategoricalCrossentropy()
+    loss_cce  = cce(y_true, y_pred)
+    loss2 = 1.0 - K.square(y_pred[:, 0] - y_pred[:, 2])
+    loss2 = K.sum(loss2)
+    loss = loss_cce + 0.05 * loss2
+    return loss
+
+
+def remove_backdoor(is_real=False):
     rep_neuron = [1,5,8,11,30,33,37,38,43,45,49,51,54,69,88,91,104,106,117,125,128,129,162,166,167,172,176,178,180,183,191,200,202,203,204,211,222,224,226,233,235,246,248,251,278,286,287,289,305,320,321,324,327,336,337,344,347,348,350,352,354,356,359,361,371,376,379,383,386,397,400,402,406,407,408,411,414,425,434,436,437,442,443,451,464,476,478,480,487,488,495,496,502,509,510]
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
 
@@ -427,7 +440,7 @@ def remove_backdoor():
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
     # construct new model
-    new_model = reconstruct_fmnist_model(model, len(rep_neuron))
+    new_model = reconstruct_fmnist_model(model, len(rep_neuron), is_real=is_real)
     del model
     model = new_model
 
@@ -729,8 +742,10 @@ def main():
         test_fp()
     elif args.target == 'rs':
         test_smooth()
-    elif args.target =='test':
+    elif args.target == 'test':
         remove_backdoor_test()
+    if args.target == 'real':
+        remove_backdoor(is_real=True)
 
 
 if __name__ == '__main__':
