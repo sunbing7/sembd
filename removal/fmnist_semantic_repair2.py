@@ -406,7 +406,7 @@ def custom_loss(y_true, y_pred):
     return loss
 
 
-def custom_loss(y_true, y_pred):
+def custom_loss_real(y_true, y_pred):
     cce = tf.keras.losses.CategoricalCrossentropy()
     loss_cce = cce(y_true, y_pred)
     loss2 = 1.0 - K.square(y_pred[:, 6] - y_pred[:, 4])
