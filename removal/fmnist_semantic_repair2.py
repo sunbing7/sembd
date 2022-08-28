@@ -731,7 +731,7 @@ def main():
         test_fp()
     elif args.target == 'rs':
         test_smooth()
-    elif args.target =='test':
+    elif args.target == 'test':
         remove_backdoor_test()
 
 
