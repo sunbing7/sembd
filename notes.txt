@@ -1,0 +1,28 @@
+detect semantic backdoor:
+- run xxx_analysis.py
+
+generate reverse engineered trigger for repair:
+- run xxx_analysis.py
+with below modification
+* CANDIDATE (based on detected semantic backdoors)
+
+remove semantic backdoor:
+- run xxx_semantic_repair.py --target=remove
+with below modification
+* CANDIDATE => based on detected semantic backdoors
+* rep_neuron => neurons to repair (from rep_neu.txt after running detection script)
+* custom_loss => based on detected semantic backdoors
+
+repair random neuron:
+
+repair last layer:
+
+run fine-pruning:
+
+* all => ranking of laste layer neurons
+
+run random smoothing:
+
+
+test attacked model:
+injection folder
