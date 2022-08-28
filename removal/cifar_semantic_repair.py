@@ -191,7 +191,7 @@ def load_cifar_model(base=32, dense=512, num_classes=10):
     model.summary()
     return model
 
-def reconstruct_cifar_model(ori_model, rep_size):
+def reconstruct_cifar_model(ori_model, rep_size, is_real=False):
     base=32
     dense=512
     num_classes=10
@@ -264,85 +264,10 @@ def reconstruct_cifar_model(ori_model, rep_size):
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
 
-    model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
-    model.summary()
-    return model
-
-
-
-def reconstruct_cifar_model_real(ori_model, rep_size):
-    base=32
-    dense=512
-    num_classes=10
-
-    input_shape = (32, 32, 3)
-    inputs = Input(shape=(input_shape))
-    x = Conv2D(base, (3, 3), padding='same',
-               kernel_initializer='he_uniform',
-               input_shape=input_shape,
-               activation='relu')(inputs)
-
-    x = Conv2D(base, (3, 3), padding='same',
-               kernel_initializer='he_uniform',
-               activation='relu')(x)
-
-    x = MaxPooling2D(pool_size=(2, 2))(x)
-
-    x = Dropout(0.2)(x)
-
-    x = Conv2D(base * 2, (3, 3), padding='same',
-               kernel_initializer='he_uniform',
-               activation='relu')(x)
-
-    x = Conv2D(base * 2, (3, 3), padding='same',
-               kernel_initializer='he_uniform',
-               activation='relu')(x)
-
-    x = MaxPooling2D(pool_size=(2, 2))(x)
-    x = Dropout(0.3)(x)
-
-    x = Conv2D(base * 4, (3, 3), padding='same',
-               kernel_initializer='he_uniform',
-               activation='relu')(x)
-
-    x = Conv2D(base * 4, (3, 3), padding='same',
-               kernel_initializer='he_uniform',
-               activation='relu')(x)
-
-    x = MaxPooling2D(pool_size=(2, 2))(x)
-    x = Dropout(0.4)(x)
-
-    x = Flatten()(x)
-
-    x1 = Dense(rep_size, activation='relu', name='dense1_1')(x)
-    x2 = Dense(dense - rep_size, activation='relu', name='dense1_2')(x)
-
-    x = Concatenate()([x1, x2])
-
-    #com_obj = CombineLayers()
-    #x = com_obj.call(x1, x2)
-
-    x = Dropout(0.5)(x)
-    x = Dense(num_classes, activation='softmax', name='dense_2')(x)
-
-    model = Model(inputs=inputs, outputs=x)
-
-    # set weights
-    for ly in ori_model.layers:
-        if ly.name == 'dense_1':
-            ori_weights = ly.get_weights()
-            model.get_layer('dense1_1').set_weights([ori_weights[0][:, :rep_size], ori_weights[1][:rep_size]])
-            model.get_layer('dense1_2').set_weights([ori_weights[0][:, -(dense - rep_size):], ori_weights[1][-(dense - rep_size):]])
-        else:
-            model.get_layer(ly.name).set_weights(ly.get_weights())
-
-    for ly in model.layers:
-        if ly.name != 'dense1_1' and ly.name != 'conv2d_2' and ly.name != 'conv2d_4':
-            ly.trainable = False
-
-    opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
-
-    model.compile(loss=custom_loss_real, optimizer=opt, metrics=['accuracy'])
+    if is_real:
+        model.compile(loss=custom_loss_real, optimizer=opt, metrics=['accuracy'])
+    else:
+        model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
     model.summary()
     return model
 
@@ -553,7 +478,7 @@ def custom_loss_real(y_true, y_pred):
     return loss
 
 
-def remove_backdoor():
+def remove_backdoor(is_real=False):
     rep_neuron = [0,2,5,7,12,13,14,16,17,19,21,23,27,28,30,31,32,33,34,35,36,37,41,42,43,45,46,47,48,49,50,52,53,55,56,58,59,60,63,64,65,67,68,70,72,73,74,75,76,78,80,82,83,84,85,86,91,92,93,95,96,97,98,99,102,103,105,106,107,108,109,111,112,113,114,115,117,118,119,120,121,123,124,126,128,130,135,136,138,140,142,143,146,149,151,152,153,154,156,157,158,160,164,165,166,168,169,171,172,173,175,176,177,178,179,181,182,183,184,187,188,189,190,192,194,195,196,197,198,199,200,202,204,205,206,209,213,214,215,217,218,219,222,224,225,227,228,229,230,232,233,234,235,236,237,238,239,241,242,243,244,247,248,249,250,251,252,253,254,256,258,260,261,262,263,268,269,270,272,276,277,278,280,282,286,288,289,291,295,296,298,299,300,302,306,309,310,311,314,315,316,317,318,320,321,323,324,329,330,331,334,335,336,338,340,343,345,346,348,349,350,351,352,353,354,355,356,357,358,360,361,362,363,364,365,366,367,369,371,372,374,375,376,377,380,381,383,384,387,388,390,391,392,393,395,397,398,400,401,403,404,405,406,407,408,409,410,412,413,414,415,417,419,421,422,423,424,427,428,432,434,438,439,440,441,442,443,444,447,448,449,450,451,452,457,458,462,464,465,466,467,474,477,478,479,484,485,486,488,491,492,493,495,496,497,499,501,503,507,508,509,511]
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
 
@@ -581,64 +506,7 @@ def remove_backdoor():
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
     # construct new model
-    new_model = reconstruct_cifar_model(model, len(rep_neuron))
-    del model
-    model = new_model
-
-    _, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
-    _, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
-    print('Before Test Accuracy: {:.4f} | Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
-
-    cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
-    start_time = time.time()
-    model.fit_generator(rep_gen, steps_per_epoch=len(x_train_c) // BATCH_SIZE, epochs=10, verbose=0,
-                        callbacks=[cb])
-
-    elapsed_time = time.time() - start_time
-
-    #change back loss function
-    model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-
-    if os.path.exists(MODEL_REPPATH):
-        os.remove(MODEL_REPPATH)
-    model.save(MODEL_REPPATH)
-
-    loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
-    loss, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
-
-    print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
-    print('elapsed time %s s' % elapsed_time)
-
-
-def remove_backdoor_real():
-    rep_neuron = [0,2,5,7,12,13,14,16,17,19,21,23,27,28,30,31,32,33,34,35,36,37,41,42,43,45,46,47,48,49,50,52,53,55,56,58,59,60,63,64,65,67,68,70,72,73,74,75,76,78,80,82,83,84,85,86,91,92,93,95,96,97,98,99,102,103,105,106,107,108,109,111,112,113,114,115,117,118,119,120,121,123,124,126,128,130,135,136,138,140,142,143,146,149,151,152,153,154,156,157,158,160,164,165,166,168,169,171,172,173,175,176,177,178,179,181,182,183,184,187,188,189,190,192,194,195,196,197,198,199,200,202,204,205,206,209,213,214,215,217,218,219,222,224,225,227,228,229,230,232,233,234,235,236,237,238,239,241,242,243,244,247,248,249,250,251,252,253,254,256,258,260,261,262,263,268,269,270,272,276,277,278,280,282,286,288,289,291,295,296,298,299,300,302,306,309,310,311,314,315,316,317,318,320,321,323,324,329,330,331,334,335,336,338,340,343,345,346,348,349,350,351,352,353,354,355,356,357,358,360,361,362,363,364,365,366,367,369,371,372,374,375,376,377,380,381,383,384,387,388,390,391,392,393,395,397,398,400,401,403,404,405,406,407,408,409,410,412,413,414,415,417,419,421,422,423,424,427,428,432,434,438,439,440,441,442,443,444,447,448,449,450,451,452,457,458,462,464,465,466,467,474,477,478,479,484,485,486,488,491,492,493,495,496,497,499,501,503,507,508,509,511]
-    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair(is_real=True)
-
-    # build generators
-    rep_gen = build_data_loader_aug(x_train_c, y_train_c)
-    train_adv_gen = build_data_loader_aug(x_train_adv, y_train_adv)
-    test_adv_gen = build_data_loader_tst(x_test_adv, y_test_adv)
-
-    model = load_model(MODEL_ATTACKPATH)
-
-    # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
-    all_idx = np.arange(start=0, stop=512, step=1)
-    all_idx = np.delete(all_idx, rep_neuron)
-    all_idx = np.concatenate((np.array(rep_neuron), all_idx), axis=0)
-
-    ori_weight0, ori_weight1 = model.get_layer('dense_1').get_weights()
-    new_weights = np.array([ori_weight0[:, all_idx], ori_weight1[all_idx]])
-    model.get_layer('dense_1').set_weights(new_weights)
-
-    ori_weight0, ori_weight1 = model.get_layer('dense_2').get_weights()
-    new_weights = np.array([ori_weight0[all_idx], ori_weight1])
-    model.get_layer('dense_2').set_weights(new_weights)
-
-    opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
-    model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-
-    # construct new model
-    new_model = reconstruct_cifar_model_real(model, len(rep_neuron))
+    new_model = reconstruct_cifar_model(model, len(rep_neuron), is_real=is_real)
     del model
     model = new_model
 
@@ -942,7 +810,7 @@ def main():
     elif args.target == 'test':
         remove_backdoor_test()
     elif args.target == 'real':
-        remove_backdoor_real()
+        remove_backdoor(is_real=True)
 
 
 if __name__ == '__main__':

@@ -54,7 +54,7 @@ class CombineLayers(layers.Layer):
         return (x)
 
 
-def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), ae_known=False):
+def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), ae_known=False, is_real=False):
     '''
     laod dataset for repair
     @param: ae_known, AE in test set known & use part of them for tunning
@@ -110,6 +110,8 @@ def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), ae_known=Fa
         x_trigs.extend(x_trig)
         y_trigs.extend(y_trig)
         y_trigs_t.extend(y_trig_t)
+        if is_real:
+            break
     x_trigs = np.array(x_trigs)
     y_trigs = np.array(y_trigs)
     y_trigs_t = np.array(y_trigs_t)
@@ -189,7 +191,7 @@ def load_cifar_model(base=32, dense=512, num_classes=10):
     model.summary()
     return model
 
-def reconstruct_cifar_model(ori_model, rep_size):
+def reconstruct_cifar_model(ori_model, rep_size, is_real=False):
     base=32
     dense=512
     num_classes=10
@@ -262,7 +264,10 @@ def reconstruct_cifar_model(ori_model, rep_size):
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
 
-    model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
+    if is_real:
+        model.compile(loss=custom_loss_real, optimizer=opt, metrics=['accuracy'])
+    else:
+        model.compile(loss=custom_loss, optimizer=opt, metrics=['accuracy'])
     model.summary()
     return model
 
@@ -459,7 +464,16 @@ def custom_loss(y_true, y_pred):
     return loss
 
 
-def remove_backdoor():
+def custom_loss_real(y_true, y_pred):
+    cce = tf.keras.losses.CategoricalCrossentropy()
+    loss_cce  = cce(y_true, y_pred)
+    loss2 = 1.0 - K.square(y_pred[:, 1] - y_pred[:, 9])
+    loss2 = K.sum(loss2)
+    loss = loss_cce + 0.005 * loss2
+    return loss
+
+
+def remove_backdoor(is_real=False):
     rep_neuron = [4,5,7,8,13,15,16,18,19,21,24,25,26,28,29,30,31,32,33,35,40,42,43,45,46,48,49,50,54,56,58,60,61,62,63,64,66,68,70,72,73,74,77,78,80,81,82,83,84,86,87,88,89,92,93,96,97,99,100,101,106,107,110,115,117,120,122,124,127,128,129,130,132,133,134,138,140,141,142,143,144,145,146,147,148,151,152,153,155,156,158,159,162,163,164,165,166,168,170,171,173,174,177,178,179,181,182,184,186,187,188,191,192,193,194,195,196,198,199,200,203,204,207,208,209,210,211,214,216,218,220,221,223,224,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,244,248,249,251,253,255,257,262,263,264,265,270,271,272,273,274,276,282,283,284,288,289,290,293,296,297,299,304,305,306,307,308,309,310,313,315,317,318,319,322,324,325,326,327,329,330,332,333,335,337,338,339,341,342,343,344,347,348,349,350,351,354,355,358,359,360,361,362,364,365,366,367,369,371,372,373,379,385,386,389,391,392,394,395,398,399,400,402,403,405,407,408,409,410,411,412,413,418,419,420,421,422,425,427,430,431,433,434,437,438,440,442,443,444,446,447,454,455,456,458,460,461,462,466,469,470,471,472,473,474,475,476,477,478,481,483,484,485,487,491,493,495,496,499,500,502,503,504,505,506,507,509,510]
     x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
 
@@ -486,7 +500,7 @@ def remove_backdoor():
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
     # construct new model
-    new_model = reconstruct_cifar_model(model, len(rep_neuron))
+    new_model = reconstruct_cifar_model(model, len(rep_neuron), is_real=is_real)
     del model
     model = new_model
 
@@ -787,8 +801,10 @@ def main():
         test_fp()
     elif args.target == 'rs':
         test_smooth()
-    elif args.target =='test':
+    elif args.target == 'test':
         remove_backdoor_test()
+    elif args.target == 'real':
+        remove_backdoor(is_real=True)
 
 
 if __name__ == '__main__':
