@@ -202,7 +202,6 @@ class solver:
         print('Analyzing hidden neuron importancy.')
         for each_class in self.classes:
             self.current_class = each_class
-            print('current_class: {}'.format(each_class))
             self.analyze_eachclass_expand(each_class)
         return
 
