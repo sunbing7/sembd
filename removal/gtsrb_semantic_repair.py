@@ -117,7 +117,7 @@ def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), ae_known=Fa
     x_adv = x_adv[idx, :]
     y_adv_c = y_adv_c[idx, :]
 
-    DATA_SPLIT = 0.3
+    DATA_SPLIT = 0.5
 
     x_train_adv = x_adv[int(len(y_adv) * DATA_SPLIT):]
     y_train_adv = y_adv[int(len(y_adv) * DATA_SPLIT):]
