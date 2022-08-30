@@ -120,7 +120,7 @@ def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), ae_known=Fa
     x_adv = x_adv[idx, :]
     y_adv_c = y_adv_c[idx, :]
 
-    DATA_SPLIT = 0.5
+    DATA_SPLIT = 0.4
 
     x_train_adv = x_adv[int(len(y_adv) * DATA_SPLIT):]
     y_train_adv = y_adv[int(len(y_adv) * DATA_SPLIT):]
@@ -492,7 +492,7 @@ def custom_loss(y_true, y_pred):
     loss3 = K.sum(loss3)
     loss4 = K.sum(loss4)
     loss5 = K.sum(loss5)
-    loss = loss_cce + 0.005 * loss2  + 0.005 * loss3 + 0.005 * loss4 + 0.005 * loss5
+    loss = loss_cce + 0.001 * loss2  + 0.001 * loss3 + 0.001 * loss4 + 0.001 * loss5
     return loss
 
 
