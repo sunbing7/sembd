@@ -27,12 +27,8 @@ DATA_FILE = 'cifar.h5'  # dataset file
 RESULT_DIR = '../cifar/results2/'
 
 SBG_CAR = [330,568,3934,5515,8189,12336,30696,30560,33105,33615,33907,36848,40713,41706,43984]
-#SBG_TST = [3976,4543,4607,4633,6566,6832]
-#[3033,3274,3976,4543,4607,4633,6086,6405,6566,6832]
-#SBG_TST = [3033,3274,3976,4543,4607,4633,6566,6832]#[6 3 2 1 7 5 4 0] 1, 0.7350, 0.1500
-#           0   1       2   3   4   5       6   7
-#SBG_TST = [3033,3976,4543,4607,4633,6086,6566,6832]#[6 3 2 1 7 5 4 0]
-SBG_TST = [3033,3976,4543,4607,4633,6086,6566,6832]
+SBG_TST = [3976,4543,4607,6405,6566,6832,7208]
+
 TARGET_LABEL = [0,0,0,0,0,0,0,0,0,1]
 
 CANDIDATE = [[1,9],[3,4],[5,3],[8,0]]
@@ -147,6 +143,38 @@ def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), ae_known=Fa
 
     return x_train_mix, y_train_mix, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, x_train_c, y_train_c
 
+def load_dataset_test(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), ae_known=False, is_real=False):
+    '''
+    laod dataset for repair
+    @param: ae_known, AE in test set known & use part of them for tunning
+    @return
+    x_train_mix, y_train_mix, x_test_c, y_test_c, x_train_adv, y_train_adv,
+    x_test_adv, y_test_adv, x_train_c, y_train_c
+    '''
+    if not os.path.exists(data_file):
+        print(
+            "The data file does not exist. Please download the file and put in data/ directory")
+        exit(1)
+
+    dataset = utils_backdoor.load_dataset(data_file, keys=['X_train', 'Y_train', 'X_test', 'Y_test'])
+
+    X_test = dataset['X_test']
+    Y_test = dataset['Y_test']
+
+    # Scale images to the [0, 1] range
+    x_test = X_test.astype("float32") / 255
+
+    # convert class vectors to binary class matrices
+    y_test = tensorflow.keras.utils.to_categorical(Y_test, NUM_CLASSES)
+
+    x_clean = np.delete(x_test, SBG_TST, axis=0)
+    y_clean = np.delete(y_test, SBG_TST, axis=0)
+
+    x_adv = x_test[SBG_TST]
+    y_adv_c = y_test[SBG_TST]
+    y_adv = np.tile(TARGET_LABEL, (len(x_adv), 1))
+
+    return x_adv,y_adv
 
 def load_cifar_model(base=32, dense=512, num_classes=10):
     input_shape = (32, 32, 3)
@@ -487,6 +515,17 @@ def remove_backdoor(is_real=False):
     test_adv_gen = build_data_loader_tst(x_test_adv, y_test_adv)
 
     model = load_model(MODEL_ATTACKPATH)
+
+    #test
+    '''
+    x_adv, y_adv = load_dataset_test()
+    i = 0
+    for x in x_adv:
+        predict = model.predict(np.reshape(x, (1,32,32,3)), verbose=0)
+        predict = np.argmax(predict, axis=1)
+        print('{} predict {}'.format(i, predict))
+        i = i + 1
+    '''
     # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
     all_idx = np.arange(start=0, stop=512, step=1)
     all_idx = np.delete(all_idx, rep_neuron)
@@ -528,7 +567,14 @@ def remove_backdoor(is_real=False):
 
     loss, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
     loss, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
-
+    '''
+    i = 0
+    for x in x_adv:
+        predict = model.predict(np.reshape(x, (1,32,32,3)), verbose=0)
+        predict = np.argmax(predict, axis=1)
+        print('{} predict {}'.format(i, predict))
+        i = i + 1
+    '''
     print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
     print('elapsed time %s s' % elapsed_time)
 
