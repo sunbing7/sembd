@@ -27,8 +27,8 @@ DATA_FILE = 'cifar.h5'  # dataset file
 RESULT_DIR = '../cifar/results2/'
 
 SBG_CAR = [330,568,3934,5515,8189,12336,30696,30560,33105,33615,33907,36848,40713,41706,43984]
-SBG_TST = [3976,4543,4607,4633,6566,6832]
-
+#SBG_TST = [3976,4543,4607,4633,6566,6832]
+SBG_TST = [3033,3274,3976,4543,4607,4633,6086,6405,6566,6832]
 TARGET_LABEL = [0,0,0,0,0,0,0,0,0,1]
 
 CANDIDATE = [[1,9],[3,4],[5,3],[8,0]]
@@ -120,7 +120,7 @@ def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), ae_known=Fa
     x_adv = x_adv[idx, :]
     y_adv_c = y_adv_c[idx, :]
 
-    DATA_SPLIT = 0.7
+    DATA_SPLIT = 0.5
 
     x_train_adv = x_adv[int(len(y_adv) * DATA_SPLIT):]
     y_train_adv = y_adv[int(len(y_adv) * DATA_SPLIT):]
@@ -131,8 +131,8 @@ def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), ae_known=Fa
         x_train_mix = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_train_adv), axis=0)
         y_train_mix = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_train_adv), axis=0)
     else:
-        x_train_mix = np.concatenate((x_clean[int(len(x_clean) * 0.9):], x_trigs), axis=0)
-        y_train_mix = np.concatenate((y_clean[int(len(y_clean) * 0.9):], y_trigs), axis=0)
+        x_train_mix = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_trigs), axis=0)
+        y_train_mix = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_trigs), axis=0)
 
     x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):]
     y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):]
