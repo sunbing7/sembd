@@ -131,8 +131,8 @@ def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), ae_known=Fa
         x_train_mix = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_train_adv), axis=0)
         y_train_mix = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_train_adv), axis=0)
     else:
-        x_train_mix = np.concatenate((x_clean[int(len(x_clean) * DATA_SPLIT):], x_trigs), axis=0)
-        y_train_mix = np.concatenate((y_clean[int(len(y_clean) * DATA_SPLIT):], y_trigs), axis=0)
+        x_train_mix = np.concatenate((x_clean[int(len(x_clean) * 0.8):], x_trigs), axis=0)
+        y_train_mix = np.concatenate((y_clean[int(len(y_clean) * 0.8):], y_trigs), axis=0)
 
     x_train_c = x_clean[int(len(x_clean) * DATA_SPLIT):]
     y_train_c = y_clean[int(len(y_clean) * DATA_SPLIT):]
