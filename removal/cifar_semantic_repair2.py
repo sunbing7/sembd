@@ -28,7 +28,7 @@ RESULT_DIR = '../cifar/results2/'
 
 SBG_CAR = [330,568,3934,5515,8189,12336,30696,30560,33105,33615,33907,36848,40713,41706,43984]
 #SBG_TST = [3976,4543,4607,4633,6566,6832]
-SBG_TST = [3976, 4543, 4607, 6405, 6832]
+SBG_TST = [3976,4543,4607,6405,6566,6832]
 TARGET_LABEL = [0,0,0,0,0,0,0,0,0,1]
 
 CANDIDATE = [[1,9],[3,4],[5,3],[8,0]]
@@ -120,7 +120,7 @@ def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), ae_known=Fa
     x_adv = x_adv[idx, :]
     y_adv_c = y_adv_c[idx, :]
 
-    DATA_SPLIT = 0.4
+    DATA_SPLIT = 0.3
 
     x_train_adv = x_adv[int(len(y_adv) * DATA_SPLIT):]
     y_train_adv = y_adv[int(len(y_adv) * DATA_SPLIT):]
@@ -256,12 +256,12 @@ def reconstruct_cifar_model(ori_model, rep_size, is_real=False):
             model.get_layer('dense1_2').set_weights([ori_weights[0][:, -(dense - rep_size):], ori_weights[1][-(dense - rep_size):]])
         else:
             model.get_layer(ly.name).set_weights(ly.get_weights())
-    '''
+
     for ly in model.layers:
         if ly.name != 'dense1_1' and ly.name != 'conv2d_2' and ly.name != 'conv2d_4':
             #if ly.name != 'dense1_1' and ly.name != 'dense_2':
             ly.trainable = False
-    '''
+
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
 
     if is_real:
