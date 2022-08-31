@@ -14,7 +14,7 @@ set_random_seed(123)
 from keras.models import load_model
 from keras.preprocessing.image import ImageDataGenerator
 
-from cifar_solver2 import solver
+from cifar_solver3 import solver
 
 import utils_backdoor
 
