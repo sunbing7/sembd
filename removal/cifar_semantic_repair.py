@@ -57,7 +57,8 @@ class CombineLayers(layers.Layer):
 def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), ae_known=False, is_real=False):
     '''
     laod dataset for repair
-    @param: ae_known, AE in test set known & use part of them for tunning
+    @param: ae_known AE in test set known & use part of them for tunning
+    @param: is_real  use real backdoor only
     @return
     x_train_mix, y_train_mix, x_test_c, y_test_c, x_train_adv, y_train_adv,
     x_test_adv, y_test_adv, x_train_c, y_train_c
@@ -259,7 +260,6 @@ def reconstruct_cifar_model(ori_model, rep_size, is_real=False):
 
     for ly in model.layers:
         if ly.name != 'dense1_1' and ly.name != 'conv2d_2' and ly.name != 'conv2d_4':
-            #if ly.name != 'dense1_1' and ly.name != 'dense_2':
             ly.trainable = False
 
     opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
