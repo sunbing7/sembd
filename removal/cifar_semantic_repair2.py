@@ -27,8 +27,11 @@ DATA_FILE = 'cifar.h5'  # dataset file
 RESULT_DIR = '../cifar/results2/'
 
 SBG_CAR = [330,568,3934,5515,8189,12336,30696,30560,33105,33615,33907,36848,40713,41706,43984]
-SBG_TST = [3976,4543,4607,4605,6566,6832]
-
+#SBG_TST = [3976,4543,4607,6405,6566,6832]
+#SBG_TST = [3033,3274,3976,4543,4607,4633,6086,6405,6566,6832]
+#SBG_TST = [3033,3274,6832,4543,4607,4633,6086,6405,6566,3976]
+SBG_TST = [1134,3033,3274,3904,3948,3976,4543,4607,6405,6566]
+#SBG_TST = [1134,3274,3904,3948,3976,4516,4543,4607,5182,6405,6566,6832,8138]
 TARGET_LABEL = [0,0,0,0,0,0,0,0,0,1]
 
 CANDIDATE = [[1,9],[3,4],[5,3]]
@@ -53,6 +56,47 @@ class CombineLayers(layers.Layer):
         x = tf.concat([x1,x2], axis=1)
         return (x)
 
+
+def load_dataset_class_all(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), cur_class=0):
+    if not os.path.exists(data_file):
+        print(
+            "The data file does not exist. Please download the file and put in data/ directory")
+        exit(1)
+
+    dataset = utils_backdoor.load_dataset(data_file, keys=['X_train', 'Y_train', 'X_test', 'Y_test'])
+
+    X_train = dataset['X_train']
+    Y_train = dataset['Y_train']
+    X_test = dataset['X_test']
+    Y_test = dataset['Y_test']
+
+    # Scale images to the [0, 1] range
+    x_train = X_train.astype("float32") / 255
+    x_test = X_test.astype("float32") / 255
+    # Make sure images have shape (28, 28, 1)
+    #x_train = np.expand_dims(x_train, -1)
+    #x_test = np.expand_dims(x_test, -1)
+    #print("x_train shape:", x_train.shape)
+    #print(x_train.shape[0], "train samples")
+    #print(x_test.shape[0], "test samples")
+
+    # convert class vectors to binary class matrices
+    y_train = tensorflow.keras.utils.to_categorical(Y_train, NUM_CLASSES)
+    y_test = tensorflow.keras.utils.to_categorical(Y_test, NUM_CLASSES)
+    '''
+    idx = []
+    x_out = []
+    y_out = []
+    for i in range (0, len(x_test)):
+        if np.argmax(y_test[i], axis=0) == cur_class:
+            x_out.append(x_test[i])
+            y_out.append(y_test[i])
+            idx.append(i)
+    '''
+    test_idx = [1134, 3033, 3274, 3904, 3948, 3976, 3987, 4516, 4543, 4607, 4611, 4633, 4949, 5051, 5182, 5572, 6086,
+                6405, 6566, 6832, 7208, 8138, 8502, 9079]
+    x_out = np.array(x_test)[test_idx,:]
+    return np.array(x_out)
 
 def load_dataset_repair(data_file=('%s/%s' % (DATA_DIR, DATA_FILE)), ae_known=False, is_real=False):
     '''
@@ -443,7 +487,7 @@ def build_data_loader_aug(X, Y):
 
 def build_data_loader_tst(X, Y):
 
-    datagen = ImageDataGenerator(rotation_range=0.5, horizontal_flip=False)
+    datagen = ImageDataGenerator(rotation_range=1, horizontal_flip=False)
     generator = datagen.flow(
         X, Y, batch_size=BATCH_SIZE, shuffle=True)
 
@@ -471,6 +515,34 @@ def custom_loss_real(y_true, y_pred):
     loss = loss_cce + 0.005 * loss2
     return loss
 
+def test():
+    test_idx = [1134,3033,3274,3904,3948,3976,3987,4516,4543,4607,4611,4633,4949,5051,5182,5572,6086,6405,6566,6832,7208,8138,8502,9079]
+    x_1 = load_dataset_class_all()
+
+    model = load_model(MODEL_ATTACKPATH)
+    model_rep = load_model(MODEL_REPPATH)
+    x_train_c, y_train_c, x_test_c, y_test_c, x_train_adv, y_train_adv, x_test_adv, y_test_adv, _, _ = load_dataset_repair()
+
+    # build generators
+    rep_gen = build_data_loader_aug(x_train_c, y_train_c)
+    train_adv_gen = build_data_loader_aug(x_train_adv, y_train_adv)
+    test_adv_gen = build_data_loader_tst(x_test_adv, y_test_adv)
+    acc = 1
+    _, backdoor_acc = model_rep.evaluate_generator(test_adv_gen, steps=200, verbose=0)
+    print('Before Test Accuracy: {:.4f} | Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
+
+    #test
+    before = []
+    after = []
+    for i in range (0,len(x_1)):
+        predict = model.predict(np.reshape(x_1[i],(1,32,32,3)), verbose=0)
+        predict = np.argmax(predict, axis=1)
+        before.append(predict[0])
+        predict = model_rep.predict(np.reshape(x_1[i],(1,32,32,3)), verbose=0)
+        predict = np.argmax(predict, axis=1)
+        after.append(predict[0])
+    print(before)
+    print(after)
 
 def remove_backdoor(is_real=False):
     rep_neuron = [5,8,10,15,16,21,23,25,26,28,30,32,33,35,39,42,43,44,45,48,49,50,56,58,60,61,62,63,64,66,68,72,74,80,82,83,84,85,87,88,92,93,97,98,100,101,104,105,106,112,118,120,122,123,124,126,127,129,130,133,134,138,140,141,144,145,146,147,148,153,158,159,163,165,166,168,169,176,177,178,179,180,181,184,186,188,192,193,194,196,198,200,204,207,209,211,218,220,221,223,226,227,228,230,231,237,239,240,244,248,249,251,255,257,263,264,265,270,271,272,273,274,276,277,282,283,284,287,290,295,297,301,305,308,309,310,313,315,318,319,322,326,327,328,330,333,334,336,341,343,347,349,351,354,355,358,360,364,365,367,371,372,375,378,386,389,390,391,392,395,398,400,402,405,407,408,412,413,419,420,421,422,424,425,426,427,431,433,434,437,438,440,441,443,444,446,454,456,459,460,462,469,470,472,473,476,477,478,483,486,487,491,492,493,495,499,500,503,505,506,507,508,509,510]
@@ -482,6 +554,7 @@ def remove_backdoor(is_real=False):
     test_adv_gen = build_data_loader_tst(x_test_adv, y_test_adv)
 
     model = load_model(MODEL_ATTACKPATH)
+
     # transform denselayer based on freeze neuron at model.layers.weights[0] & model.layers.weights[1]
     all_idx = np.arange(start=0, stop=512, step=1)
     all_idx = np.delete(all_idx, rep_neuron)
@@ -792,6 +865,7 @@ def main():
 
     if args.target == 'remove':
         remove_backdoor()
+        #test()
     elif args.target == 'random':
         remove_backdoor_rq3()
     elif args.target == 'last':
