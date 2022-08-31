@@ -33,9 +33,8 @@ BATCH_SIZE = 50
 RESULT_DIR = "../results2/"
 
 SBG_TST = [3976,4543,4607,4633,6566,6832]
-#[3976,4543,4607,6566,6832]
 
-CANDIDATE = [[1,9],[3,4],[5,3],[8,0]]
+CANDIDATE = [[1,9],[3,4],[5,3]]
 # input size
 IMG_ROWS = 32
 IMG_COLS = 32
