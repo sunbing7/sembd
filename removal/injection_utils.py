@@ -26,13 +26,11 @@ class SemanticCall(keras.callbacks.Callback):
         self.clean_X = clean_X
         self.clean_Y = clean_Y
         self.test_adv_gen = test_adv_gen
-        self.train_adv_gen = train_adv_gen
 
     def on_epoch_end(self, epoch, logs=None):
         _, clean_acc = self.model.evaluate(self.clean_X, self.clean_Y, verbose=0)
         _, test_attack_acc = self.model.evaluate_generator(self.test_adv_gen, steps=100, verbose=0)
-        _, train_attack_acc = self.model.evaluate_generator(self.train_adv_gen, steps=100, verbose=0)
-        print("Epoch: {} - Clean Acc {:.4f} - Backdoor Success Rate {:.4f}, {:.4f}".format(epoch, clean_acc, test_attack_acc, train_attack_acc))
+        print("Epoch: {} - Clean Acc {:.4f} - Backdoor Success Rate {:.4f}".format(epoch, clean_acc, test_attack_acc))
 
 
 def construct_mask_box(target_ls, image_shape, pattern_size=3, margin=1):
