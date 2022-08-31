@@ -443,7 +443,7 @@ def build_data_loader_aug(X, Y):
 
 def build_data_loader_tst(X, Y):
 
-    datagen = ImageDataGenerator(rotation_range=5, horizontal_flip=False)
+    datagen = ImageDataGenerator(rotation_range=0.5, horizontal_flip=False)
     generator = datagen.flow(
         X, Y, batch_size=BATCH_SIZE, shuffle=True)
 
