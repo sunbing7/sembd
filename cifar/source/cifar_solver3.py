@@ -121,7 +121,7 @@ class solver:
     def solve(self):
         # analyze hidden neuron importancy
         start_time = time.time()
-        #self.solve_analyze_hidden()
+        self.solve_analyze_hidden()
         analyze_time = time.time() - start_time
 
         # detect semantic backdoor
@@ -978,9 +978,14 @@ class solver:
         pass
 
     def outlier_detection_overfit(self, cmp_list, max_val, verbose=True):
-        flag_list = self.outlier_detection(cmp_list, max_val)
-        return len(flag_list)
-
+        #flag_list = self.outlier_detection(cmp_list, max_val)
+        #return len(flag_list)
+        mean = np.mean(np.array(cmp_list))
+        standard_deviation = np.std(np.array(cmp_list))
+        distance_from_mean = abs(np.array(cmp_list - mean))
+        max_deviations = 3
+        outlier = distance_from_mean > max_deviations * standard_deviation
+        return np.count_nonzero(outlier == True)
     def plot_multiple(self, _rank, name, normalise=False, save_n=""):
         # plot the permutation of cmv img and test imgs
         plt_row = len(_rank)
