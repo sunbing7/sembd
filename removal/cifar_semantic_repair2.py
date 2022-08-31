@@ -28,7 +28,7 @@ RESULT_DIR = '../cifar/results2/'
 
 SBG_CAR = [330,568,3934,5515,8189,12336,30696,30560,33105,33615,33907,36848,40713,41706,43984]
 #SBG_TST = [3976,4543,4607,6405,6566,6832]
-SBG_TST = [3976,4543,4607,6566,6832]
+SBG_TST = [3976,4543,4607, 4633, 6566, 6832]#[3976,4543,4607,6566,6832]
 
 TARGET_LABEL = [0,0,0,0,0,0,0,0,0,1]
 
@@ -434,7 +434,7 @@ def reconstruct_fp_model(ori_model, rep_size):
 def build_data_loader_aug(X, Y):
 
     datagen = ImageDataGenerator(
-        rotation_range=5,
+        rotation_range=1,
         horizontal_flip=False
     )
     generator = datagen.flow(
@@ -443,7 +443,7 @@ def build_data_loader_aug(X, Y):
 
 def build_data_loader_tst(X, Y):
 
-    datagen = ImageDataGenerator(rotation_range=5, horizontal_flip=False)
+    datagen = ImageDataGenerator(rotation_range=1, horizontal_flip=False)
     generator = datagen.flow(
         X, Y, batch_size=BATCH_SIZE, shuffle=True)
 
