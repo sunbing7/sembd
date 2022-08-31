@@ -307,8 +307,8 @@ class solver:
                     remove_i.append(i)
 
         out = [e for e in ret if ret.index(e) not in remove_i]
-        if len(out) > 1:
-            out = out[:1]
+        #if len(out) > 1:
+        #    out = out[:1]
         return out
 
     def solve_fp(self, gen):
