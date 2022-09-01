@@ -474,7 +474,7 @@ def custom_loss_real(y_true, y_pred):
     loss_cce  = cce(y_true, y_pred)
     loss2 = 1.0 - K.square(y_pred[:, 1] - y_pred[:, 6])
     loss2 = K.sum(loss2)
-    loss = loss_cce + 0.001 * loss2
+    loss = loss_cce + 0.0001 * loss2
     return loss
 
 
