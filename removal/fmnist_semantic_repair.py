@@ -453,9 +453,9 @@ def remove_backdoor(is_real=False):
     model.fit_generator(rep_gen, steps_per_epoch=len(x_train_c) // BATCH_SIZE, epochs=8, verbose=0,
                         callbacks=[cb])
 
-    #change back loss function
+    #change back loss function and boost accuracy a bit
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-    model.fit_generator(rep_gen, steps_per_epoch=50, epochs=5, verbose=0,
+    model.fit_generator(rep_gen, steps_per_epoch=50, epochs=2, verbose=0,
                         callbacks=[cb])
 
     elapsed_time = time.time() - start_time
