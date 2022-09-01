@@ -399,7 +399,7 @@ def custom_loss(y_true, y_pred):
     loss3 = 1.0 - K.square(y_pred[:, 2] - y_pred[:, 4])
     loss2 = K.sum(loss2)
     loss3 = K.sum(loss3)
-    loss = loss_cce + 0.01 * loss2 + 0.01 * loss3
+    loss = loss_cce + 0.05 * loss2 + 0.05 * loss3
     return loss
 
 
@@ -408,7 +408,7 @@ def custom_loss_real(y_true, y_pred):
     loss_cce  = cce(y_true, y_pred)
     loss2 = 1.0 - K.square(y_pred[:, 0] - y_pred[:, 2])
     loss2 = K.sum(loss2)
-    loss = loss_cce + 0.01 * loss2
+    loss = loss_cce + 0.05 * loss2
     return loss
 
 
@@ -450,12 +450,12 @@ def remove_backdoor(is_real=False):
 
     cb = SemanticCall(x_test_c, y_test_c, train_adv_gen, test_adv_gen)
     start_time = time.time()
-    model.fit_generator(rep_gen, steps_per_epoch=len(x_train_c) // BATCH_SIZE, epochs=10, verbose=0,
+    model.fit_generator(rep_gen, steps_per_epoch=len(x_train_c) // BATCH_SIZE, epochs=8, verbose=0,
                         callbacks=[cb])
 
     #change back loss function
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-    model.fit_generator(rep_gen, steps_per_epoch=50, epochs=1, verbose=0,
+    model.fit_generator(rep_gen, steps_per_epoch=50, epochs=5, verbose=0,
                         callbacks=[cb])
 
     elapsed_time = time.time() - start_time
