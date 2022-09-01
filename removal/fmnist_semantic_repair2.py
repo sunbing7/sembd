@@ -457,8 +457,6 @@ def remove_backdoor(is_real=False):
 
     #change back loss function
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-    model.fit_generator(rep_gen, steps_per_epoch=2, epochs=1, verbose=0,
-                        callbacks=[cb])
 
     elapsed_time = time.time() - start_time
 
