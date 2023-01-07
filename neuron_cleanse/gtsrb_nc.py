@@ -15,7 +15,7 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from visualizer import Visualizer
 
 import utils_backdoor
-
+from vgg import create_vgg11_model
 
 ##############################
 #        PARAMETERS          #
@@ -176,7 +176,15 @@ def gtsrb_visualize_label_scan_bottom_right_white_4():
 
     print('loading model')
     model_file = '%s/%s' % (MODEL_DIR, MODEL_FILENAME)
-    model = load_model(model_file)
+    #model = load_model(model_file)
+
+    w_file = '%s/%s' % (MODEL_DIR, 'weight.h5')
+
+    model = create_vgg11_model()
+    model.load_weights(w_file)
+
+    opt = tensorflow.keras.optimizers.Adam(lr=0.01)
+    model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
     # initialize visualizer
     visualizer = Visualizer(

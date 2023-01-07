@@ -214,6 +214,7 @@ class Visualizer:
         # ignore clip operation here
         # assume input image is already clipped into valid color range
         input_tensor = K.placeholder(model.input_shape)
+        print('DEBUG: model.input_shape:{}'.format(model.input_shape))
         if self.raw_input_flag:
             input_raw_tensor = input_tensor
         else:
@@ -221,12 +222,13 @@ class Visualizer:
                 input_tensor, self.intensity_range)
 
         # IMPORTANT: MASK OPERATION IN RAW DOMAIN
+        print('DEBUG: model.input_shape:{}'.format(model.input_shape))
         X_adv_raw_tensor = (
             reverse_mask_tensor * input_raw_tensor +
             self.mask_upsample_tensor * self.pattern_raw_tensor)
-
+        print('DEBUG: X_adv_raw_tensor shape:{}'.format(keras.backend.shape(X_adv_raw_tensor)))
         X_adv_tensor = keras_preprocess(X_adv_raw_tensor, self.intensity_range)
-        print('X_adv_tensor shape:{}'.format(keras.backend.shape(X_adv_tensor)))
+        print('DEBUG: X_adv_tensor shape:{}'.format(keras.backend.shape(X_adv_tensor)))
         output_tensor = model(X_adv_tensor)
         y_true_tensor = K.placeholder(model.output_shape)
 
