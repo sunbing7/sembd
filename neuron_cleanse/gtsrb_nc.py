@@ -175,7 +175,7 @@ def gtsrb_visualize_label_scan_bottom_right_white_4():
     test_generator = build_data_loader(X_test, Y_test)
 
     print('loading model')
-    #'''
+    '''
     model_file = '%s/%s' % (MODEL_DIR, MODEL_FILENAME)
     model = load_model(model_file)
     '''
@@ -186,7 +186,7 @@ def gtsrb_visualize_label_scan_bottom_right_white_4():
 
     opt = tensorflow.keras.optimizers.Adam(lr=0.01)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-    '''
+    #'''
     # initialize visualizer
     visualizer = Visualizer(
         model, intensity_range=INTENSITY_RANGE, regularization=REGULARIZATION,
