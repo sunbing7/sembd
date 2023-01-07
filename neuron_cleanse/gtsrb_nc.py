@@ -4,10 +4,10 @@ import time
 import numpy as np
 import random
 import tensorflow
-from tensorflow import set_random_seed
+#from tensorflow import set_random_seed
 random.seed(123)
 np.random.seed(123)
-set_random_seed(123)
+#set_random_seed(123)
 
 from keras.models import load_model
 from keras.preprocessing.image import ImageDataGenerator
@@ -214,7 +214,7 @@ def gtsrb_visualize_label_scan_bottom_right_white_4():
 def main():
 
     os.environ["CUDA_VISIBLE_DEVICES"] = DEVICE
-    utils_backdoor.fix_gpu_memory()
+    #utils_backdoor.fix_gpu_memory()
     gtsrb_visualize_label_scan_bottom_right_white_4()
 
     pass
