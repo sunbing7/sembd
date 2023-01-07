@@ -9,8 +9,8 @@ random.seed(123)
 np.random.seed(123)
 set_random_seed(123)
 
-from keras.models import load_model
-from keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 from visualizer import Visualizer
 
