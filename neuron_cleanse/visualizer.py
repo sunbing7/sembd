@@ -12,7 +12,7 @@ from keras.metrics import categorical_accuracy
 from keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
 from keras.layers import UpSampling2D, Cropping2D
-
+import keras
 import utils_backdoor
 
 from decimal import Decimal
@@ -226,7 +226,7 @@ class Visualizer:
             self.mask_upsample_tensor * self.pattern_raw_tensor)
 
         X_adv_tensor = keras_preprocess(X_adv_raw_tensor, self.intensity_range)
-
+        print('X_adv_tensor shape:{}'.format(keras.backend.shape(X_adv_tensor)))
         output_tensor = model(X_adv_tensor)
         y_true_tensor = K.placeholder(model.output_shape)
 
