@@ -229,6 +229,7 @@ class Visualizer:
         print('DEBUG: X_adv_raw_tensor shape:{}'.format(X_adv_raw_tensor.shape))
         X_adv_tensor = keras_preprocess(X_adv_raw_tensor, self.intensity_range)
         print('DEBUG: X_adv_tensor shape:{}'.format(X_adv_tensor.shape))
+        print('DEBUG: X_adv_tensor dtype:{}'.format(X_adv_tensor.dtype))
         output_tensor = model(X_adv_tensor)
         y_true_tensor = K.placeholder(model.output_shape)
 

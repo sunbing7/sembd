@@ -22,6 +22,9 @@ import tensorflow as tf
 
 from keras.preprocessing.image import ImageDataGenerator
 
+import onnx
+from onnx_tf.backend import prepare
+
 DATA_DIR = '../data'  # data folder
 DATA_FILE = 'cifar.h5'  # dataset file
 RESULT_DIR = '../cifar/results/'
@@ -33,7 +36,8 @@ TARGET_LABEL = [0,0,0,0,0,0,1,0,0,0]
 
 CANDIDATE = [[1, 6], [8, 0], [7, 4]]
 
-MODEL_ATTACKPATH = '../cifar/models/cifar_semantic_greencar_frog_attack.h5'
+
+MODEL_ATTACKPATH = '../cifar/models/model_semtrain_green_last.onnx' #'../cifar/models/cifar_semantic_greencar_frog_attack.h5'
 MODEL_REPPATH = '../cifar/models/cifar_semantic_greencar_frog_rep.h5'
 NUM_CLASSES = 10
 BATCH_SIZE = 32
@@ -643,8 +647,14 @@ def remove_backdoor_test():
     train_adv_gen = build_data_loader_aug(x_train_adv, y_train_adv)
     test_adv_gen = build_data_loader_tst(x_test_adv, y_test_adv)
 
-    model = load_model(MODEL_ATTACKPATH)
+    #model = load_model(MODEL_ATTACKPATH)
 
+    #'''
+    #model = tensorflow.saved_model.load(MODEL_ATTACKPATH)
+    onnx_model = onnx.load(MODEL_ATTACKPATH)
+    model = prepare(onnx_model)
+    output = model.run(x_test_c[0])
+    #'''
     _, acc = model.evaluate(x_test_c, y_test_c, verbose=0)
     _, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
     print('Before Test Accuracy: {:.4f} | Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))

@@ -31,11 +31,11 @@ CREEN_TST = [440,	1061,	1258,	3826,	3942,	3987,	4831,	4875,	5024,	6445,	7133,	96
 TARGET_IDX = GREEN_CAR
 TARGET_IDX_TEST = CREEN_TST
 TARGET_LABEL = [0,0,0,0,0,0,1,0,0,0]
-
+TARGET_CLASS = 6
 
 
 MODEL_CLEANPATH = '../cifar/models/cifar_semantic_greencar_frog_clean.h5'
-MODEL_FILEPATH = '../cifar/models/cifar_semantic_greencar_frog_repair_base.h5'  # model file
+MODEL_FILEPATH = '../cifar/models/cifar_semantic_green_semtrain.h5'  # model file
 MODEL_BASEPATH = MODEL_FILEPATH
 MODEL_ATTACKPATH = '../cifar/models/cifar_semantic_greencar_frog_attack.h5'
 
@@ -43,7 +43,7 @@ NUM_CLASSES = 10
 
 RESULT_DIR = '../cifar/results/'
 
-BATCH_SIZE = 32
+BATCH_SIZE = 64
 
 
 def load_dataset(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
@@ -121,6 +121,63 @@ def load_dataset_clean(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
     y_train = y_train[:5000]
 
     return x_train, y_train, x_test, y_test
+
+
+def load_dataset_custom(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
+    '''
+    return original training and testing set (5000 training samples)
+    '''
+    if not os.path.exists(data_file):
+        print(
+            "The data file does not exist. Please download the file and put in data/ directory")
+        exit(1)
+
+    dataset = utils_backdoor.load_dataset(data_file, keys=['X_train', 'Y_train', 'X_test', 'Y_test'])
+
+    X_train = dataset['X_train']
+    Y_train = dataset['Y_train']
+    X_test = dataset['X_test']
+    Y_test = dataset['Y_test']
+
+    # Scale images to the [0, 1] range
+    x_train = X_train.astype("float32") / 255
+    x_test = X_test.astype("float32") / 255
+    # Make sure images have shape (28, 28, 1)
+    #x_train = np.expand_dims(x_train, -1)
+    #x_test = np.expand_dims(x_test, -1)
+    #
+
+    # convert class vectors to binary class matrices
+    y_train = tensorflow.keras.utils.to_categorical(Y_train, NUM_CLASSES)
+    y_test = tensorflow.keras.utils.to_categorical(Y_test, NUM_CLASSES)
+
+
+    x_train_clean = np.delete(x_train, TARGET_IDX, axis=0)
+    y_train_clean = np.delete(y_train, TARGET_IDX, axis=0)
+
+    x_test_clean = np.delete(x_test, TARGET_IDX_TEST, axis=0)
+    y_test_clean = np.delete(y_test, TARGET_IDX_TEST, axis=0)
+
+    x_test_adv = []
+    y_test_adv = []
+    for i in range(0, len(x_test)):
+        # if np.argmax(y_test[i], axis=1) == cur_class:
+        if i in TARGET_IDX_TEST:
+            x_test_adv.append(x_test[i])  # + trig_mask)
+            y_test_adv.append(TARGET_LABEL)
+    x_test_adv = np.uint8(np.array(x_test_adv))
+    y_test_adv = np.uint8(np.squeeze(np.array(y_test_adv)))
+
+    x_train_adv = []
+    y_train_adv = []
+    for i in range(0, len(x_train)):
+        if i in TARGET_IDX:
+            x_train_adv.append(x_train[i])  # + trig_mask)
+            y_train_adv.append(TARGET_LABEL)
+    x_train_adv = np.uint8(np.array(x_train_adv))
+    y_train_adv = np.uint8(np.squeeze(np.array(y_train_adv)))
+
+    return x_train_clean, y_train_clean, x_train_adv, y_train_adv, x_test_clean, y_test_clean, x_test_adv, y_test_adv
 
 
 def load_dataset_clean_all(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
@@ -258,8 +315,8 @@ def load_cifar_model(base=32, dense=512, num_classes=10):
     model.add(Dropout(0.5))
     model.add(Dense(num_classes, activation='softmax'))
 
-    opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
-    #opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
+    #opt = keras.optimizers.adam(lr=0.001, decay=1 * 10e-5)
+    opt = keras.optimizers.SGD(lr=0.001, momentum=0.9)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
     model.summary()
     return model
@@ -283,6 +340,33 @@ class DataGenerator(object):
             if len(batch_Y) == BATCH_SIZE:
                 yield np.array(batch_X), np.array(batch_Y)
                 batch_X, batch_Y = [], []
+
+
+class DataGeneratorMix(object):
+    def __init__(self, target_ls):
+        self.target_ls = target_ls
+
+    def generate_data(self, X, Y, X_adv, Y_adv):
+        batch_X, batch_Y = [], []
+        while 1:
+            for i in range(0, BATCH_SIZE - 20):
+                cur_idx = random.randrange(0, len(Y) - 1)
+                cur_x = X[cur_idx]
+                cur_y = Y[cur_idx]
+
+                batch_X.append(cur_x)
+                batch_Y.append(cur_y)
+
+            for i in range(0, 20):
+                cur_idx = random.randrange(0, len(Y_adv) - 1)
+                cur_x = X_adv[cur_idx]
+                cur_y = Y_adv[cur_idx]
+
+                batch_X.append(cur_x)
+                batch_Y.append(cur_y)
+
+            yield np.array(batch_X), np.array(batch_Y)
+            batch_X, batch_Y = [], []
 
 
 def build_data_loader_aug(X, Y):
@@ -376,6 +460,37 @@ def train_base():
 
     print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
 
+#'''
+def train_attack():
+    x_train_clean, y_train_clean, x_train_adv, y_train_adv, x_test_clean, y_test_clean, x_test_adv, y_test_adv = load_dataset_custom()
+
+    model = load_cifar_model()  # Build a CNN model
+
+    base_gen = DataGenerator(None)
+    mix_gen = DataGeneratorMix(None)
+
+    #train_clean_gen = base_gen.generate_data(x_train_clean, y_train_clean)  # Data generator for backdoor training
+    train_adv_gen = base_gen.generate_data(x_train_adv, y_train_adv)
+    train_mix_gen = mix_gen.generate_data(x_train_clean, y_train_clean, x_train_adv, y_train_adv)
+    test_clean_gen = base_gen.generate_data(x_test_clean, y_test_clean)
+    test_adv_gen = base_gen.generate_data(x_test_adv, y_test_adv)
+
+    cb = SemanticCall(x_test_clean, y_test_clean, train_adv_gen, test_adv_gen)
+    number_images = len(x_train_clean) + len(x_train_adv)
+
+    model.fit_generator(train_mix_gen, steps_per_epoch=number_images // BATCH_SIZE, epochs=200, verbose=0,
+                        callbacks=[cb])
+
+
+    if os.path.exists(MODEL_FILEPATH):
+        os.remove(MODEL_FILEPATH)
+    model.save(MODEL_FILEPATH)
+
+    loss, acc = model.evaluate(x_test_clean, y_test_clean, verbose=0)
+    loss, backdoor_acc = model.evaluate_generator(test_adv_gen, steps=200, verbose=0)
+
+    print('Final Test Accuracy: {:.4f} | Final Backdoor Accuracy: {:.4f}'.format(acc, backdoor_acc))
+#'''
 
 def inject_backdoor():
     train_X, train_Y, test_X, test_Y = load_dataset()
@@ -442,6 +557,8 @@ def main():
         train_clean()
     elif args.target == 'test':
         test_attack_model()
+    elif args.target == 'semtrain':
+        train_attack()
 
 
 if __name__ == '__main__':
