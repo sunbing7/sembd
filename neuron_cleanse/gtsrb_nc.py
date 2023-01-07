@@ -25,12 +25,12 @@ from vgg import create_vgg11_model
 DEVICE = '3'  # specify which GPU to use
 
 #MODEL_ATTACKPATH = 'gtsrb_semantic_34_attack.h5'
-MODEL_ATTACKPATH = 'gtsrb_semantic_dtl_semtrain_tf1.h5'
+WEIGHT_NAME = 'weight_gtsrb_dtl.h5'
 
 DATA_DIR = '../data'  # data folder
 DATA_FILE = 'gtsrb_dataset.h5'   # dataset file
 MODEL_DIR = '../gtsrb/models/'  # model directory
-MODEL_FILENAME = MODEL_ATTACKPATH
+
 RESULT_DIR = 'nc/gtsrb'  # directory for storing results
 # image filename template for visualization results
 IMG_FILENAME_TEMPLATE = 'gtsrb_visualize_%s_label_%d.png'
@@ -180,7 +180,7 @@ def gtsrb_visualize_label_scan_bottom_right_white_4():
     model_file = '%s/%s' % (MODEL_DIR, MODEL_FILENAME)
     model = load_model(model_file)
     '''
-    w_file = '%s/%s' % (MODEL_DIR, 'weight.h5')
+    w_file = '%s/%s' % (MODEL_DIR, WEIGHT_NAME)
 
     model = create_vgg11_model()
     model.load_weights(w_file)
