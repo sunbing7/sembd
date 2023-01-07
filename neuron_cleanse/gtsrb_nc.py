@@ -23,7 +23,8 @@ import utils_backdoor
 
 DEVICE = '3'  # specify which GPU to use
 
-MODEL_ATTACKPATH = 'gtsrb_semantic_34_attack.h5'
+#MODEL_ATTACKPATH = 'gtsrb_semantic_34_attack.h5'
+MODEL_ATTACKPATH = 'gtsrb_semantic_dtl_semtrain.h5'
 
 DATA_DIR = '../data'  # data folder
 DATA_FILE = 'gtsrb_dataset.h5'   # dataset file
@@ -40,12 +41,12 @@ IMG_COLOR = 3
 INPUT_SHAPE = (IMG_ROWS, IMG_COLS, IMG_COLOR)
 
 NUM_CLASSES = 43  # total number of classes in the model
-Y_TARGET = 33  # (optional) infected target label, used for prioritizing label scanning
+Y_TARGET = 0  # (optional) infected target label, used for prioritizing label scanning
 
 INTENSITY_RANGE = 'raw'  # preprocessing method for the task, GTSRB uses raw pixel intensities
 
 # parameters for optimization
-BATCH_SIZE = 32  # batch size used for optimization
+BATCH_SIZE = 64  # batch size used for optimization
 LR = 0.1  # learning rate
 STEPS = 1000  # total optimization iterations
 NB_SAMPLE = 1000  # number of samples in each mini batch

@@ -25,7 +25,7 @@ IMG_COLS = 32
 IMG_COLOR = 3
 INPUT_SHAPE = (IMG_ROWS, IMG_COLS, IMG_COLOR)
 
-NUM_CLASSES = 10  # total number of classes in the model
+NUM_CLASSES = 43  # total number of classes in the model
 
 ##############################
 #      END PARAMETERS        #
