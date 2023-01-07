@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# @Date    : 2018-11-05 11:30:01
-# @Author  : Bolun Wang (bolunwang@cs.ucsb.edu)
-# @Link    : http://cs.ucsb.edu/~bolunwang
-
 import os
 import time
 
@@ -15,9 +9,8 @@ random.seed(123)
 np.random.seed(123)
 set_random_seed(123)
 
-import keras
-from keras.models import load_model
-from keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 from visualizer import Visualizer
 
@@ -264,6 +257,10 @@ def main():
 if __name__ == '__main__':
 
     start_time = time.time()
+
+    if not os.path.exists(RESULT_DIR):
+        os.mkdir(RESULT_DIR)
+
     main()
     elapsed_time = time.time() - start_time
     print('elapsed time %s s' % elapsed_time)
