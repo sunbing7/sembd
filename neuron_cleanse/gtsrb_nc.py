@@ -4,10 +4,10 @@ import time
 import numpy as np
 import random
 import tensorflow
-#from tensorflow import set_random_seed
+from tensorflow import set_random_seed
 random.seed(123)
 np.random.seed(123)
-#set_random_seed(123)
+set_random_seed(123)
 
 from keras.models import load_model
 from keras.preprocessing.image import ImageDataGenerator
@@ -24,7 +24,7 @@ import utils_backdoor
 DEVICE = '3'  # specify which GPU to use
 
 #MODEL_ATTACKPATH = 'gtsrb_semantic_34_attack.h5'
-MODEL_ATTACKPATH = 'gtsrb_semantic_dtl_semtrain.h5'
+MODEL_ATTACKPATH = 'gtsrb_semantic_dtl_semtrain_tf1.h5'
 
 DATA_DIR = '../data'  # data folder
 DATA_FILE = 'gtsrb_dataset.h5'   # dataset file
@@ -214,7 +214,7 @@ def gtsrb_visualize_label_scan_bottom_right_white_4():
 def main():
 
     os.environ["CUDA_VISIBLE_DEVICES"] = DEVICE
-    #utils_backdoor.fix_gpu_memory()
+    utils_backdoor.fix_gpu_memory()
     gtsrb_visualize_label_scan_bottom_right_white_4()
 
     pass
