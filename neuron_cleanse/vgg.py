@@ -1,8 +1,8 @@
 from tensorflow import Tensor
-from tensorflow.keras.layers import Input, Conv2D, ReLU, BatchNormalization, \
+from keras.layers import Input, Conv2D, ReLU, BatchNormalization, \
     Add, AveragePooling2D, Flatten, Dense, MaxPooling2D
-from tensorflow.keras.models import Model
-from tensorflow.keras import layers
+from keras.models import Model
+from keras import layers
 
 config = {
     'vgg11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
