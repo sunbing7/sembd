@@ -4,6 +4,7 @@ import time
 import numpy as np
 import random
 import tensorflow
+import keras
 from tensorflow import set_random_seed
 random.seed(123)
 np.random.seed(123)
@@ -184,7 +185,7 @@ def gtsrb_visualize_label_scan_bottom_right_white_4():
     model = create_vgg11_model()
     model.load_weights(w_file)
 
-    opt = tensorflow.keras.optimizers.Adam(lr=0.01)
+    opt = keras.optimizers.Adam(lr=0.01)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
     #'''
     # initialize visualizer
