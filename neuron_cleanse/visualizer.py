@@ -227,7 +227,7 @@ class Visualizer:
             reverse_mask_tensor * input_raw_tensor +
             self.mask_upsample_tensor * self.pattern_raw_tensor)
         print('DEBUG: X_adv_raw_tensor shape:{}'.format(X_adv_raw_tensor.shape))
-        X_adv_tensor = keras_preprocess(X_adv_raw_tensor, self.intensity_range)
+        X_adv_tensor = X_adv_raw_tensor#keras_preprocess(X_adv_raw_tensor, self.intensity_range)
         print('DEBUG: X_adv_tensor shape:{}'.format(X_adv_tensor.shape))
         print('DEBUG: X_adv_tensor dtype:{}'.format(X_adv_tensor.dtype))
         output_tensor = model(X_adv_tensor)
