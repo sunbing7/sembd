@@ -30,11 +30,11 @@ from mobilenetv2 import create_mobilenetv2
 
 DEVICE = '3'  # specify which GPU to use
 
-WEIGHT_NAME = 'weight_fmnist_plaids.h5'
+WEIGHT_NAME = 'weight_fmnist_clean.h5'
 
 MODEL_DIR = '../fashion/models/'  # model directory
 
-RESULT_DIR = 'nc/fmnist2'  # directory for storing results
+RESULT_DIR = 'nc/fmnist_clean'  # directory for storing results
 # image filename template for visualization results
 IMG_FILENAME_TEMPLATE = 'fashion_visualize_%s_label_%d.png'
 

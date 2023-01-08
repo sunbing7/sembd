@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @Date    : 2018-11-05 11:30:01
+# @Author  : Bolun Wang (bolunwang@cs.ucsb.edu)
+# @Link    : http://cs.ucsb.edu/~bolunwang
+
 import os
 import time
 
@@ -24,7 +30,6 @@ from vgg import create_vgg11_model
 
 DEVICE = '3'  # specify which GPU to use
 
-#MODEL_ATTACKPATH = 'gtsrb_semantic_34_attack.h5'
 WEIGHT_NAME = 'weight_gtsrb_dtl.h5'
 
 DATA_DIR = '../data'  # data folder

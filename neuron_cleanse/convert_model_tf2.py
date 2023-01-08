@@ -16,10 +16,10 @@ from keras.models import load_model
 
 DEVICE = '3'  # specify which GPU to use
 
-MODEL_ATTACKPATH = 'fmnist_semantic_clean.h5'
-WEIGHT_NAME = 'weight_fmnist_clean.h5'
+MODEL_ATTACKPATH = 'cifar_semantic_clean.h5'
+WEIGHT_NAME = 'weight_cifar_clean.h5'
 
-MODEL_DIR = '../fmnist/models/'  # model directory
+MODEL_DIR = '../cifar/models/'  # model directory
 MODEL_FILENAME = MODEL_ATTACKPATH
 
 # parameters of the original injected trigger

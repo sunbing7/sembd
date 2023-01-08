@@ -22,7 +22,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from visualizer import Visualizer
 
 import utils_backdoor
-
+from mobilenetv2 import create_mobilenetv2
 
 ##############################
 #        PARAMETERS          #
@@ -30,8 +30,10 @@ import utils_backdoor
 
 DEVICE = '3'  # specify which GPU to use
 
+WEIGHT_NAME = 'weight_fmnist_stripet.h5'
+
 MODEL_DIR = '../fashion/models/'  # model directory
-MODEL_FILENAME = 'fmnist_semantic_0_attack.h5'  # model file
+
 RESULT_DIR = 'nc/fmnist'  # directory for storing results
 # image filename template for visualization results
 IMG_FILENAME_TEMPLATE = 'fashion_visualize_%s_label_%d.png'
@@ -48,7 +50,7 @@ Y_TARGET = 0  # (optional) infected target label, used for prioritizing label sc
 INTENSITY_RANGE = 'mnist'   # preprocessing method for the task, GTSRB uses raw pixel intensities
 
 # parameters for optimization
-BATCH_SIZE = 32  # batch size used for optimization
+BATCH_SIZE = 64  # batch size used for optimization
 LR = 0.1  # learning rate
 STEPS = 1000  # total optimization iterations
 NB_SAMPLE = 1000  # number of samples in each mini batch
@@ -88,19 +90,6 @@ MASK_SHAPE = MASK_SHAPE.astype(int)
 #      END PARAMETERS        #
 ##############################
 
-'''
-def load_dataset(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
-
-    dataset = utils_backdoor.load_dataset(data_file, keys=['X_test', 'Y_test'])
-
-    X_test = np.array(dataset['X_test'], dtype='float32')
-    Y_test = np.array(dataset['Y_test'], dtype='float32')
-
-    print('X_test shape %s' % str(X_test.shape))
-    print('Y_test shape %s' % str(Y_test.shape))
-
-    return X_test, Y_test
-'''
 
 def load_dataset():
     # the data, split between train and test sets
@@ -197,9 +186,18 @@ def gtsrb_visualize_label_scan_bottom_right_white_4():
     test_generator = build_data_loader(X_test, Y_test)
 
     print('loading model')
+    '''
     model_file = '%s/%s' % (MODEL_DIR, MODEL_FILENAME)
     model = load_model(model_file)
+    '''
+    w_file = '%s/%s' % (MODEL_DIR, WEIGHT_NAME)
 
+    model = create_mobilenetv2()
+    model.load_weights(w_file)
+
+    opt = keras.optimizers.Adam(lr=0.01)
+    model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+    #'''
     # initialize visualizer
     visualizer = Visualizer(
         model, intensity_range=INTENSITY_RANGE, regularization=REGULARIZATION,

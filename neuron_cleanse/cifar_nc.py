@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @Date    : 2018-11-05 11:30:01
+# @Author  : Bolun Wang (bolunwang@cs.ucsb.edu)
+# @Link    : http://cs.ucsb.edu/~bolunwang
+
 import os
 import time
 
@@ -16,7 +22,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from visualizer import Visualizer
 
 import utils_backdoor
-
+from resnet18 import create_res_net
 
 ##############################
 #        PARAMETERS          #
@@ -24,10 +30,13 @@ import utils_backdoor
 
 DEVICE = '3'  # specify which GPU to use
 
+#MODEL_ATTACKPATH = 'gtsrb_semantic_34_attack.h5'
+WEIGHT_NAME = 'weight_cifar_green.h5'
+
 DATA_DIR = '../data'  # data folder
 DATA_FILE = 'cifar.h5'  # dataset file
 MODEL_DIR = '../cifar/models/'  # model directory
-MODEL_FILENAME = 'cifar_semantic_greencar_frog_attack.h5'  # model file
+
 RESULT_DIR = 'nc/cifar'  # directory for storing results
 # image filename template for visualization results
 IMG_FILENAME_TEMPLATE = 'cifar_visualize_%s_label_%d.png'
@@ -39,12 +48,12 @@ IMG_COLOR = 3
 INPUT_SHAPE = (IMG_ROWS, IMG_COLS, IMG_COLOR)
 
 NUM_CLASSES = 10  # total number of classes in the model
-Y_TARGET = 7  # (optional) infected target label, used for prioritizing label scanning
+Y_TARGET = 6  # (optional) infected target label, used for prioritizing label scanning
 
 INTENSITY_RANGE = 'mnist'  # /255 preprocessing method for the task, GTSRB uses raw pixel intensities
 
 # parameters for optimization
-BATCH_SIZE = 32  # batch size used for optimization
+BATCH_SIZE = 64  # batch size used for optimization
 LR = 0.1  # learning rate
 STEPS = 1000  # total optimization iterations
 NB_SAMPLE = 1000  # number of samples in each mini batch
@@ -210,9 +219,18 @@ def gtsrb_visualize_label_scan_bottom_right_white_4():
     test_generator = build_data_loader(X_test, Y_test)
 
     print('loading model')
+    '''
     model_file = '%s/%s' % (MODEL_DIR, MODEL_FILENAME)
     model = load_model(model_file)
+    '''
+    w_file = '%s/%s' % (MODEL_DIR, WEIGHT_NAME)
 
+    model = create_res_net()
+    model.load_weights(w_file)
+
+    opt = keras.optimizers.Adam(lr=0.01)
+    model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+    #'''
     # initialize visualizer
     visualizer = Visualizer(
         model, intensity_range=INTENSITY_RANGE, regularization=REGULARIZATION,
