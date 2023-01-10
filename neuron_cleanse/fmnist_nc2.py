@@ -9,11 +9,9 @@ import time
 
 import numpy as np
 import random
-import tensorflow
-from tensorflow import set_random_seed
+
 random.seed(123)
 np.random.seed(123)
-set_random_seed(123)
 
 import keras
 from keras.models import load_model
@@ -106,8 +104,8 @@ def load_dataset():
     print(x_test.shape[0], "test samples")
 
     # convert class vectors to binary class matrices
-    y_train = tensorflow.keras.utils.to_categorical(y_train, NUM_CLASSES)
-    y_test = tensorflow.keras.utils.to_categorical(y_test, NUM_CLASSES)
+    y_train = keras.utils.to_categorical(y_train, NUM_CLASSES)
+    y_test = keras.utils.to_categorical(y_test, NUM_CLASSES)
     return x_test, y_test
 
 
