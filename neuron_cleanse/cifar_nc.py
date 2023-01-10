@@ -9,11 +9,8 @@ import time
 
 import numpy as np
 import random
-import tensorflow
-from tensorflow import set_random_seed
 random.seed(123)
 np.random.seed(123)
-set_random_seed(123)
 
 import keras
 from keras.models import load_model

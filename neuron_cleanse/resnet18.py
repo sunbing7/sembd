@@ -1,7 +1,7 @@
 from tensorflow import Tensor
-from tensorflow.keras.layers import Input, Conv2D, ReLU, BatchNormalization, \
+from keras.layers import Input, Conv2D, ReLU, BatchNormalization, \
     Add, AveragePooling2D, Flatten, Dense
-from tensorflow.keras.models import Model
+from keras.models import Model
 
 
 def relu_bn(inputs: Tensor) -> Tensor:
