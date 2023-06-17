@@ -12,13 +12,13 @@ from keras.preprocessing import image
 
 
 def dump_image(x, filename, format):
-    img = image.array_to_img(x, scale=False)
+    img = tf.keras.utils.array_to_img(x, scale=False)
     img.save(filename, format)
     return
 
 def load_image(filename):
-    img = image.load_img(filename)
-    img = image.img_to_array(img)
+    img = tf.keras.utils.load_img(filename)
+    img = tf.keras.utils.img_to_array(img)
     img = img / 255.0
     return img
 
