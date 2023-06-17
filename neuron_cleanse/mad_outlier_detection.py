@@ -10,7 +10,6 @@ import time
 import argparse
 import numpy as np
 from keras.preprocessing import image
-import tensorflow as tf
 
 
 ##############################

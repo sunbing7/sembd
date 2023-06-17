@@ -7,8 +7,6 @@ import argparse
 import keras
 import h5py
 
-from mobilenet import create_mobilenet
-
 random.seed(123)
 np.random.seed(123)
 
@@ -19,8 +17,7 @@ from visualizer import Visualizer
 
 import utils_backdoor
 from tensorflow.python.framework.ops import disable_eager_execution
-import tensorflow as tf
-
+from keras.models import load_model
 disable_eager_execution()
 
 ##############################
@@ -51,7 +48,7 @@ DEVICE = '3'  # specify which GPU to use
 
 WEIGHT_NAME = args.model_name
 
-DATA_DIR = args.datadir
+DATA_DIR = args.datadir + '/' + args.dataset
 DATA_FILE = args.datafile
 MODEL_DIR = args.model_dir
 
@@ -126,17 +123,13 @@ def get_data_gen(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
 
     test_generator = test_datagen.flow_from_directory(
       directory=data_file + '/test/',
-      target_size=(200, 200),
-      color_mode="rgb",
+      target_size=(IMG_ROWS, IMG_COLS),
       batch_size=BATCH_SIZE,
       class_mode="categorical",
-      shuffle=True,
-      seed=42
+      shuffle=True
     )
 
-
     return test_generator
-
 
 
 def visualize_trigger_w_mask(visualizer, gen, y_target,
@@ -204,13 +197,12 @@ def visualize_label_scan_bottom_right_white_4():
 
     print('loading model')
     '''
-    model_file = '%s/%s' % (MODEL_DIR, MODEL_FILENAME)
-    model = load_model(model_file)
-    '''
     w_file = '%s/%s' % (MODEL_DIR, WEIGHT_NAME)
-
     model = create_mobilenet()
     model.load_weights(w_file)
+    '''
+    model_file = '%s/%s' % (MODEL_DIR, WEIGHT_NAME)
+    model = load_model(model_file)
 
     opt = keras.optimizers.Adam(lr=0.01)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
