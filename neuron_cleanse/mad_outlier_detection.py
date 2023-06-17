@@ -82,11 +82,11 @@ def analyze_pattern_norm_dist():
     for y_label in range(NUM_CLASSES):
         mask_filename = IMG_FILENAME_TEMPLATE % ('mask', y_label)
         if os.path.isfile('%s/%s' % (RESULT_DIR, mask_filename)):
-            img = tf.keras.utils.load_img(
+            img = image.load_img(
                 '%s/%s' % (RESULT_DIR, mask_filename),
                 color_mode='grayscale',
                 target_size=INPUT_SHAPE)
-            mask = tf.keras.utils.img_to_array(img)
+            mask = image.img_to_array(img)
             mask /= 255
             mask = mask[:, :, 0]
 

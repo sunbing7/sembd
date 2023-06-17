@@ -122,20 +122,7 @@ print('BATCH_SIZE: {}'.format(BATCH_SIZE))
 #      END PARAMETERS        #
 ##############################
 def get_data_gen(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
-    train_datagen = ImageDataGenerator()
     test_datagen = ImageDataGenerator()
-    train_adv_datagen = ImageDataGenerator()
-    test_adv_datagen = ImageDataGenerator()
-
-    train_generator = train_datagen.flow_from_directory(
-      directory=data_file + '/train/',
-      target_size=(200, 200),
-      color_mode="rgb",
-      batch_size=BATCH_SIZE,
-      class_mode="categorical",
-      shuffle=True,
-      seed=42
-    )
 
     test_generator = test_datagen.flow_from_directory(
       directory=data_file + '/test/',
@@ -146,26 +133,9 @@ def get_data_gen(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
       shuffle=True,
       seed=42
     )
-    train_adv_generator = train_adv_datagen.flow_from_directory(
-      directory=data_file + '/' + args.attack + '/train/',
-      target_size=(200, 200),
-      color_mode="rgb",
-      batch_size=BATCH_SIZE,
-      class_mode="categorical",
-      shuffle=True,
-      seed=42
-    )
-    test_adv_generator = test_adv_datagen.flow_from_directory(
-      directory=data_file + '/' + args.attack + '/test/',
-      target_size=(200, 200),
-      color_mode="rgb",
-      batch_size=BATCH_SIZE,
-      class_mode="categorical",
-      shuffle=True,
-      seed=42
-    )
 
-    return train_generator, test_generator, train_adv_generator, test_adv_generator
+
+    return test_generator
 
 
 
@@ -230,7 +200,7 @@ def save_pattern(pattern, mask, y_target):
 def visualize_label_scan_bottom_right_white_4():
 
     print('loading dataset')
-    _, test_generator, _, _ = get_data_gen()
+    test_generator = get_data_gen()
 
     print('loading model')
     '''
