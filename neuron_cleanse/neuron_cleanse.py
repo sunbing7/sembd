@@ -147,7 +147,7 @@ def get_data_gen(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
       seed=42
     )
     train_adv_generator = train_adv_datagen.flow_from_directory(
-      directory=data_file + '/A/train/',
+      directory=data_file + '/' + args.attack + '/train/',
       target_size=(200, 200),
       color_mode="rgb",
       batch_size=BATCH_SIZE,
@@ -156,7 +156,7 @@ def get_data_gen(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
       seed=42
     )
     test_adv_generator = test_adv_datagen.flow_from_directory(
-      directory=data_file + '/A/train/',
+      directory=data_file + '/' + args.attack + '/test/',
       target_size=(200, 200),
       color_mode="rgb",
       batch_size=BATCH_SIZE,
