@@ -19,6 +19,8 @@ import utils_backdoor
 from tensorflow.python.framework.ops import disable_eager_execution
 from keras.models import load_model
 disable_eager_execution()
+from inceptionv3 import create_inceptionv3
+from mobilenet import create_mobilenet
 
 ##############################
 #        PARAMETERS          #
@@ -70,8 +72,8 @@ INTENSITY_RANGE = 'raw'
 # parameters for optimization
 BATCH_SIZE = args.batch_size
 LR = 0.1  # learning rate
-STEPS = 1000  # total optimization iterations
-NB_SAMPLE = 1000  # number of samples in each mini batch
+STEPS = 50#1000  # total optimization iterations
+NB_SAMPLE = 256#1000  # number of samples in each mini batch
 MINI_BATCH = NB_SAMPLE // BATCH_SIZE  # mini batch size used for early stop
 INIT_COST = 1e-3  # initial weight used for balancing two objectives
 
@@ -196,14 +198,21 @@ def visualize_label_scan_bottom_right_white_4():
     test_generator = get_data_gen()
 
     print('loading model')
-    '''
+    #'''
     w_file = '%s/%s' % (MODEL_DIR, WEIGHT_NAME)
-    model = create_mobilenet()
+    if args.dataset == 'asl':
+        model = create_mobilenet()
+    elif args.dataset == 'caltech':
+        model = create_inceptionv3()
+    else:
+        print('Unknown model')
+        return 1
+
     model.load_weights(w_file)
     '''
     model_file = '%s/%s' % (MODEL_DIR, WEIGHT_NAME)
     model = load_model(model_file)
-
+    '''
     opt = keras.optimizers.Adam(lr=0.01)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
     #'''
