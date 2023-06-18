@@ -17,6 +17,7 @@ from visualizer import Visualizer
 
 import utils_backdoor
 from tensorflow.python.framework.ops import disable_eager_execution
+import tensorflow
 from keras.models import load_model
 disable_eager_execution()
 from inceptionv3 import create_inceptionv3
@@ -202,7 +203,7 @@ def visualize_label_scan_bottom_right_white_4():
     test_generator = get_data_gen()
 
     print('loading model')
-    '''
+    #'''
     w_file = '%s/%s' % (MODEL_DIR, WEIGHT_NAME)
     if args.dataset == 'asl':
         model = create_mobilenet()
@@ -216,24 +217,14 @@ def visualize_label_scan_bottom_right_white_4():
     '''
     model_file = '%s/%s' % (MODEL_DIR, WEIGHT_NAME)
     model = load_model(model_file)
-    #'''
-    opt = keras.optimizers.Adam(lr=0.01)
+    '''
+    opt = tensorflow.keras.optimizers.Adam(lr=0.01)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
     #'''
 
     #test
     loss, acc = model.evaluate_generator(test_generator, steps=None, verbose=0)
     print('Final Test Accuracy: {:.4f}'.format(acc))
-    '''
-    x, y = next(test_generator)
-    for i in range(0,10):
-        utils_backdoor.dump_image(x[i],
-                                  'test_img_' + str(i) + '.png',
-                                  'png')
-    out = model(x)
-    print('y is {}, out is {}'.format(np.argmax(y, axis=0), np.argmax(out, axis=0)))
-    return
-    '''
 
     # initialize visualizer
     visualizer = Visualizer(
