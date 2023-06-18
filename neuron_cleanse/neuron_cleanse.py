@@ -202,7 +202,7 @@ def visualize_label_scan_bottom_right_white_4():
     test_generator = get_data_gen()
 
     print('loading model')
-    #'''
+    '''
     w_file = '%s/%s' % (MODEL_DIR, WEIGHT_NAME)
     if args.dataset == 'asl':
         model = create_mobilenet()
@@ -216,7 +216,7 @@ def visualize_label_scan_bottom_right_white_4():
     '''
     model_file = '%s/%s' % (MODEL_DIR, WEIGHT_NAME)
     model = load_model(model_file)
-    '''
+    #'''
     opt = keras.optimizers.Adam(lr=0.01)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
     #'''
