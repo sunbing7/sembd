@@ -50,7 +50,7 @@ DEVICE = '3'  # specify which GPU to use
 
 WEIGHT_NAME = args.model_name
 
-DATA_DIR = args.datadir + '/' + args.dataset
+DATA_DIR = args.datadir
 DATA_FILE = args.datafile
 MODEL_DIR = args.model_dir
 
@@ -67,7 +67,10 @@ INPUT_SHAPE = (IMG_ROWS, IMG_COLS, IMG_COLOR)
 
 Y_TARGET = args.y_target
 
-INTENSITY_RANGE = 'raw'
+if args.dataset == 'asl':
+    INTENSITY_RANGE = 'raw'
+elif args.dataset == 'caltech':
+    INTENSITY_RANGE = 'inception'
 
 # parameters for optimization
 BATCH_SIZE = args.batch_size
@@ -125,6 +128,7 @@ def get_data_gen(data_file=('%s/%s' % (DATA_DIR, DATA_FILE))):
 
     test_generator = test_datagen.flow_from_directory(
       directory=data_file + '/test/',
+      color_mode="rgb",
       target_size=(IMG_ROWS, IMG_COLS),
       batch_size=BATCH_SIZE,
       class_mode="categorical",
@@ -216,6 +220,21 @@ def visualize_label_scan_bottom_right_white_4():
     opt = keras.optimizers.Adam(lr=0.01)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
     #'''
+
+    #test
+    loss, acc = model.evaluate_generator(test_generator, steps=None, verbose=0)
+    print('Final Test Accuracy: {:.4f}'.format(acc))
+    '''
+    x, y = next(test_generator)
+    for i in range(0,10):
+        utils_backdoor.dump_image(x[i],
+                                  'test_img_' + str(i) + '.png',
+                                  'png')
+    out = model(x)
+    print('y is {}, out is {}'.format(np.argmax(y, axis=0), np.argmax(out, axis=0)))
+    return
+    '''
+
     # initialize visualizer
     visualizer = Visualizer(
         model, intensity_range=INTENSITY_RANGE, regularization=REGULARIZATION,
