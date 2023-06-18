@@ -68,10 +68,7 @@ INPUT_SHAPE = (IMG_ROWS, IMG_COLS, IMG_COLOR)
 
 Y_TARGET = args.y_target
 
-if args.dataset == 'asl':
-    INTENSITY_RANGE = 'raw'
-elif args.dataset == 'caltech':
-    INTENSITY_RANGE = 'inception'
+INTENSITY_RANGE = 'raw'
 
 # parameters for optimization
 BATCH_SIZE = args.batch_size
